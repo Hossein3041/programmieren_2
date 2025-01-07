@@ -1,0 +1,43 @@
+class LinkedList{
+
+    class ListElem{
+        ListElem m_Next;
+
+        ListElem m_Prev;
+
+        int m_Elem
+    }
+
+    ListElem m_Head;
+    ListElem m_Tail
+}
+
+
+Schreiben Sie eine Methode  "deleteLast(int n)", die prüft, ob mindestens n Elemente vorhanden sind. Falls ja, dann sollen die letzten n Elemente gelöscht werden. Sonst sollen alle Elemente gelöscht werden
+
+
+Das ist meine Lösung:
+
+public void deleteLast(int n){
+    ListElem elem = m_Head; int count = 0;
+    while(elem.getNext() != null){
+        elem = elem.getNext();
+        ++count;
+    }
+    if(n <= count){
+            ListElem lastElem = m_Tail;
+            while(n >= 0){
+                m_Tail = m_Tail.getPrev();
+                m_Tail.setNext(null);
+                --n;
+            }
+    } else {
+        ListElem aktElem = m_Head;
+        while(elem.getNext() != null){
+            elem = elem.getNext();
+            elem.setPrev(null);
+        }
+        elem = null;
+    }
+     }
+}

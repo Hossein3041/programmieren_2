@@ -1,0 +1,41 @@
+Grundwissen zu JFrame, JPanels, und Shapes ergänzend zu den Übungen am 09.04.2024 und am 10.04.2024
+
+JFrame:
+Eine Klasse, die ein Fenster darstellt, das als Container für andere Swing-Komponenten wie Buttons, Textfelder, Listen unw. fungiert.
+Ein Fenster, mit einem Rahmen, einer Titelleiste und Schaltflächen zum Schließen, Minimieren und Maximieren.
+Häufig verwendet, um grafische Benutzeroberflächen (GUIs) für Java-Anwendungen zu erstellen.
+
+Ein JFrame kann folgende Eigenschaften haben:
+1. Titel:       Wird in der Titelleiste des Fensters angezeigt
+2. Größe:       Breite und Höhe, die mit getSize() festgelegt wird
+3. Position:    Position des Fensters auf dem Bildschirm, die mit setLocationRelativeTo() oder
+                setBounds() festgelegt wird
+4. Schließverhalten: Definiert, was passieren soll, wenn der Benutzer das Fenster schließt, z.B. mit setDefaultCloseOperation()
+5. Inhalt: Die Inhalte des Fensters, die mit add() und anderen Methoden hinzugefügt werden können,
+           um andere Swing-Komponenten einzufügen
+6. Hintergrundfarbe: Farbe des Hintergrunds, die mit setBackground() festgelegt werden kann
+
+JPanel:
+Leichte Komponente, die als Container für andere Komponenten oder zur benutzerdefinierten Zeichnung verwendet wird.
+Es ist eine Unterklasse der Klasse JComponent und kann verwendet werden, um Bereiche innerhalb eines Fensters zu definieren,
+in denen andere Swing-Komponenten platziert werden können.
+
+Ein JPanel hat ähnliche Eigenschaften wie ein JFrame, ist aber in der Regel kleiner und wird oft verwendet, um bestimmte Bereiche innerhalb eines Fensters zu organisieren oder spezifische Funktionen bereitzustellen.
+Ein JPanel kann folgende Eigenschaften haben:
+
+1. Größe und Position: Breite, Höhe und Position innerhalb eines Containers können mit Methoden wie setSize(), setPreferredSize(), setBounds() und setLocation() festgelegt werden
+2. Hintergrundfarbe: Farbe des Hintergrunds des Panels kann mit setBackground() festgelegt werden
+3. Layout-Manager: Ein JPanel kann einen Layout-Manager verwenden, um die Anordnung der darin enthaltenen Komponenten zu steuern
+4. Inhalt: Andere Swing-Komponenten oder benutzerdefinierte Zeichnungen können dem JPanel hinzugefügt werden, um die Benutzeroberfläche zu gestalten oder spezifische Funktionen zu implementieren
+5. Ereignisbehandlung: Ein JPanel kann Ereignisse empfangen und darauf reagieren, z.B. Maus- oder Tastatureingaben
+
+JPanel biete eine flexible Möglichkeit, die Benutzeroberfläche einer Swing-Anwendung zu organisieren und zu gestalten. Es wird oft verwendet, um verschiedene Abschnitte innerhalb eines Fensters zu definieren,
+wie z.B. Menüs, Schaltflächenleisten oder Zeichenbereiche.
+
+
+
+
+
+
+
+

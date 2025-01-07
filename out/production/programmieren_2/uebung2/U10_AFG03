@@ -1,0 +1,60 @@
+class BinTree{
+    class Node{
+        public Node(String key, Integer data){
+            m_Key = key;
+
+            m_Data = data;
+        }
+        private String m_Key;
+
+        private Integer m_Data;
+
+        Node m_Left = null;
+
+        Node m_Right = null;
+    }
+
+    private Node m_Root = null;
+
+    public void insertRec(String key, Integer data){
+        m_Root = insertRec(m_Root, key, data);
+    }
+
+    Node insertRec(Node n, String key, Integer data){
+        if(n == null)
+            return new Node(key, data);
+        else {
+            final int RES = key.compareTo(n.m_Key);
+            if(RES < 0)
+                n.m_Left = insertRec(n.m_Left, key, data);
+            else if(RES > 0)
+                n.m_Right = insertRec(n.m_Right, key data);
+            return n;
+        }
+    }
+
+    public boolean insert(String key, Integer data){
+        Node tmp = m_Root;
+        Node father = null;
+        while(tmp != null){
+            father = tmp;
+            final int RES = key.compareTo(tmp.m_Key);
+            if(RES == 0)
+                return false;
+            tmp = RES < 0 ? m_Left : m_Right;
+        }
+        tmp = new Node(key, data);
+        if(father == null)
+            m_Root = tmp;
+        else if(key.compareTo(father.m_Key) < 0)
+            father.m_Left = tmp;
+        else
+            father.m_Right = tmp;
+        return true;
+    }
+}
+public class U10_AFG03{
+    public static void main(String[] args){
+        new BinTree();
+    }
+}

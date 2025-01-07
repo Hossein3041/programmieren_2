@@ -1,0 +1,24 @@
+Vorgehen Prog Übung:
+- Text vereinfachen:
+    - Versuchen zu verstehen, was der Text macht
+- Lösungsansätze/theorien überlegen
+- Ausprobieren
+- Im Internet/ChatGPT nach Teillösungen suchen/fragen
+
+Übungs-Veranstaltung:
+IM JFrame Fenster, dort oben wo ist Überschrift ist: Nennt sich "Leiste"
+JFrame: ist die Klasse
+
+frame.setSize(800,600) // Die Größe setzen
+frame.setTitle("Überschrift");
+// Titel kann auch gesetzt werden durch: JFrame frame = new JFrame("Überschrift 2");
+frame.setLocationRelativeTo(null); // Überschrift erscheint in der Mitte des Bildschirms
+frame.setVisible(true); // Dadurch wird das Fenster sichtbar
+frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+
+Wenn man in JFrame zeichnet, dann muss man die Leiste oben mit abziehen:
+Es gibt:
+getSize().width(), und getWidth()
+getSize().height(), und getHeight(),
+
+MVC:
