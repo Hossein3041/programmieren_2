@@ -1,0 +1,1555 @@
+Minimum/Maximum Suche
+MinMax 1 - Problem: Das Array wird sortiert. Das wollen wir nicht
+MinMax 2 - Problem: Das Array wird kopiert, und somit nicht sortiert. Hat aber den Aufwand, dass das kopiert wird.
+
+MinMax3: Sortieren eines Array kostet viel Zeit und Platz. Wir wollen nur Min und Max
+MinMax4: Durch 2 Durchläufen, den Min, sowie den Max herausholen
+MinMax5: Durch 1 Durchlauf, den Min, sowie den Max herausholen. Zwar 1 Durchlauf, aber in der for-Schleife passiert mehr.
+MinMax6: Durch 1 else, einen Vergleich weglassen. Das zweite Vergleich kommt erst zur Stande, wenn der erste Vergleich falsch war.
+
+MinMaxTest: Für jedes Verfahren die Zeit messen.
+Alles unter 1 Millisekunde, kann man ignorieren.
+
+Ab 12800 Array-Größe wird es interessanter: Die Zeitmessung ändert sich jeweils.
+________________________________________________________________________________________________________________________
+            Vorlesung 1
+Programmieren II: Einführung in Algorithmen und Datenstrukturen
+
+Ziel der Vorlesung:
+- Bewertung von Algorithmen (Groß-O Notation)
+- Sortierverfahren
+- dynamische Datenstrukturen (Vektoren und Listen)
+- Suchverfahren (Bäume und Hashing)
+Voraussetzung:
+- Vorlesung: Programmierung I (inhaltlich, nicht formal)
+
+Worum geht es bei Algorithmen?
+- viele Verfahren handeln davon, Daten zu finden
+- dazu werden die Daten oft sortiert, da hierdurch die gesuchten Informationen schneller zu finden sind
+- Sortierung dauert leider auch Zeit
+- Deshalb ist man meistens daran interessiert, sich Verfahren anzuschauen, die am Schnellsten laufen
+- Die schnellen Verfahren brauchen i.A. mehr Speicherplatz als die langsamen Verfahren
+- in seltenen Fällen ist man aber nicht primär an Geschwindigkeit sondern an Platzersparnis interessiert
+  (siehe Komprimierungsverfahren für Text, Ton, Bild und Film)
+
+Minimum / Maximum Suche
+Aufgabe:
+Eine Methode minMax soll aus einem übergebenen int-Array die minimale und die maximale Zahl suchen und zurückgeben.
+
+Problem:
+Wie kann eine Methode zwei int-Werte zurückgeben?
+
+Lösung:
+1. Eine Klasse MinMaxResult deklarieren, die zwei int-Werte als Objekt-Variablen besitzt
+2. Die Methode minMax liefert ein Objekt der Klasse MinMaxResult
+
+import java.util.Random;
+class MinMaxResult{                     // Die MinMaxResult Klasse
+    MinMaxResult(int min, int max){
+        m_Min = min;
+        m_Max = max;
+    }
+    final int m_Min;                    // Die Objekt-Variablen sind final, da sie nach der Initialisierung
+    final int m_Max;                    // nicht mehr verändert werden sollen
+}
+public class MinMaxUtils{
+    // 2 Hilfsmethoden
+    static int[] genArray(int length){  // Erzeugt ein int-Array der Länge 'length' mit zufälligen int-Werten
+        int[] res = new int[length];
+        Random rnd = new Random();
+        for(int i = 0; i < res.length; ++i)
+            res[i] = rnd.nextInt() % 1000;
+        return res;
+    }
+    static void print(int[] field){     // Druckt das übergebene int-Array auf der Konsole aus
+        for(int i : field)
+            System.out.print(i + " ");
+        System.out.println();
+    }
+}
+
+- Mit der MinMaxResult Klasse kann die Bestimmung des Minimums/Maximums leicht implementiert werden
+- hierzu gibt es unterschiedliche Varianten
+
+1. die Clevere (???) Variante:
+    - wäre das Array bereits sortiert, wäre das Minimum ganz am Anfang und das Maximum ganz am Ende des Arrays gespeichert
+    -Hierzu könnte man die Sortier-Verfahren aus dem 1. Semester anwenden
+________________________________________________________________________________________________________________________
+            MinMax1
+
+public class VL_02_MinMax1 {
+    static void selection_sort(int[] field){                    // Der Selection Sort wurde im 1. Semester besprochen
+        for(int i1 = 0; i1 < field.length-1; ++i1){
+            int min = i1;
+            for(int i2 = i1 + 1; i2 < field.length; ++i2){
+                min = i2;
+            }
+            swap(field, min, i1);
+        }
+    }
+    static void swap(int[] field, int iPos1, int iPos2){        // nach dem Sortieren ist das Minimum an der Stelle 0 und das Maximum an der Stelle field.length-1
+        int tmp = field[iPos1];
+        field[iPos1] = field[iPos2];
+        field[iPos2] = tmp;
+    }
+    static MinMaxResult minMax(int[] field){
+        selection_sort(field);
+        return new MinMaxResult(field[0], field[field.length-1]);
+    }
+    public static void main(String[] args){
+        int[] field = VL_01_MinMaxUtils.genArray(10);     // generiere zufälliges int-Array der Länge 10 und drucke es aus
+        System.out.println("Start Array");
+        VL_01_MinMaxUtils.print(field);
+        MinMaxResult res = minMax(field);                       // bestimme MinMax
+        System.out.println("nach Minimum/Maximum Suche");
+        VL_01_MinMaxUtils.print(field);
+        System.out.println("Ergebnis");
+        System.out.println("min: " + res.m_Min + "; max; " + res.m_Max);
+    }
+}
+
+- MinMax1 Version funktioniert, das Minimum und das Maximum werden gefunden
+- das Eingabe-Array wird durch Sortierung leider verändert (es wird sortiert)
+- Die Methode soll nur Informationen berechnen (Minimum/Maximum), das Array aber nicht verändern
+- daher muss das Array, dass sortiert wird, erstmal kopiert werden
+________________________________________________________________________________________________________________________
+            MinMax2
+
+import java.util.Arrays;
+public class VL_01_MinMax2 {                                    // um die Arrays Klasse zu verwenden
+    static void selection_sort(int[] field){                    // Der Selection Sort wurde im 1. Semester besprochen
+        for(int i1 = 0; i1 < field.length-1; ++i1){
+            int min = i1;
+            for(int i2 = i1 + 1; i2 < field.length; ++i2){
+                min = i2;
+            }
+            swap(field, min, i1);
+        }
+    }
+    static void swap(int[] field, int iPos1, int iPos2){        // nach dem Sortieren ist das Minimum an der Stelle 0 und das Maximum an der Stelle field.length-1
+        int tmp = field[iPos1];
+        field[iPos1] = field[iPos2];
+        field[iPos2] = tmp;
+    }
+    static MinMaxResult minMax(int[] field){                    // vor dem Sortieren eine Kopie erzeugen
+        int[] copy = Arrays.copyOf(field, field.length);
+        selection_sort(copy);
+        return new MinMaxResult(copy[0], copy[copy.length-1]);
+    }
+    public static void main(String[] args){                     // Rest wie gehabt
+        int[] field = VL_01_MinMaxUtils.genArray(10);
+        System.out.println("Start Array");
+        VL_01_MinMaxUtils.print(field);
+        MinMaxResult res = minMax(field);
+        System.out.println("nach Minimum/Maximum Suche");
+        VL_01_MinMaxUtils.print(field);
+        System.out.println("Ergebnis");
+        System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+    }
+}
+
+- MinMax2 Version funktioniert, ohne dass das Original-Eingabe-Array verändert wird
+- Lösung kann jedoch verbessert werden
+- In Array-Klasse: Neben copy-Methode, auch eine sort-Methode vorhanden
+- Diese kann man statt selbstgeschriebenen Selection-Sort-Methode verwenden
+________________________________________________________________________________________________________________________
+            MinMax3
+
+import java.util.Arrays;
+public class VL_01_MinMax3 {
+    static MinMaxResult minMax(int[] field){                            // Nach wie vor: vor dem Sortieren eine Kopie erzeugen
+        int[] copy = Arrays.copyOf(field, field.length-1);
+        Arrays.sort(copy);                                              // vordefinierte Sortierfunktion
+        return new MinMaxResult(copy[0], copy[copy.length-1]);
+    }
+    public static void main(String[] args){                             // Rest wie gehabt
+        int[] field = VL_01_MinMaxUtils.genArray(10);
+        System.out.println("Start Array");
+        VL_01_MinMaxUtils.print(field);
+        MinMaxResult res = minMax(field);
+        System.out.println("nach Minimum/Maximum Suche");
+        VL_01_MinMaxUtils.print(field);
+        System.out.println("Ergebnis");
+        System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+    }
+}
+
+- MinMax3 funktioniert auch
+- beide Verfahren sind aber wenig intelligent
+- Fürs Kopieren des Arrays muss das gesamte Array durchlaufen werden
+- Bei einem Durchlaufe hätte man das Minimum suchen können
+- bessere Idee: Array zweimal durchlaufen:
+    1. Durchlauf das Minimum und beim
+    2. Durchlauf das Maximum zu suchen
+
+public class VL_01_MinMax4 {
+    static MinMaxResult minMax(int[] field){
+        int min = field[0];                     // in min das bisherige Minimu speichern
+        for(int i : field)                      // Gesamtes Array durchlaufen: Falls neues Element kleiner min, ist es das neue min
+            if(i < min)
+                min = i;
+        int max = field[0];                     // *
+        for(int i : field)                      // * Dasselbe für max
+            if(i > max)
+                max = i;
+        return new MinMaxResult(min, max);
+    }
+    public static void main(String[] args){
+        int[] field = VL_01_MinMaxUtils.genArray(10);
+        System.out.println("Start Array");
+        VL_01_MinMaxUtils.print(field);
+        MinMaxResult res = minMax(field);
+        System.out.println("nach Minimum/Maximum Suche");
+        VL_01_MinMaxUtils.print(field);
+        System.out.println("Ergebnis");
+        System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+    }
+}
+
+- auch die MinMax4 Version scheint zu funktionieren, ohne dass das Array kopiert und sortiert wird
+- die beiden Durchläufe könnten noch zusammengefasst werden
+- statt zweimal das Array zu durchlaufen, wird bei dem einzigen Durchlauf bei jedem Array-Element, ob es sich um das neue Minimum oder um das neue Maximum handelt
+
+public class VL_01_MinMax5 {
+    static MinMaxResult minMax(int[] field){
+        int min = field[0];                     // *
+        int max = field[0];                     // * zum Anfang ist das 1. Element sowohl das Minimum als auch das Maximum
+        for(int i : field){                     // nur noch ein Durchlauf: teste jedes Element, ob es das neue Minimum oder das neue Maximum ist
+            if(i < min)
+                min = i;
+            if(i > max)
+                max = i;
+        }
+        return new MinMaxResult(min, max);
+    }
+    public static void main(String[] args){
+        int[] field = VL_01_MinMaxUtils.genArray(10);
+        System.out.println("Start Array: ");
+        VL_01_MinMaxUtils.print(field);
+        MinMaxResult res = minMax(field);
+        System.out.println("nach Minimum/Maximum Suche");
+        VL_01_MinMaxUtils.print(field);
+        System.out.println("Ergebnis");
+        System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+    }
+}
+
+- auch die MinMax5 Version funktioniert.
+- 2 Durchläufe nicht notwendig. Eine Optimierung ist noch möglich.
+- Wenn i das neue Minimum ist, kann nicht gleichzeitig das neue Maximum sein. Daher die zweite if nur berechnen, wenn die erste false ist.
+Einzige Änderung:
+static MinMaxResult minMax(int[] field){
+    int min = field[0];
+    int max = field[0];
+    for(int i : fiedl){
+        if(i < min)
+            min = i;
+        else if(i > max)
+            max = i;
+    }
+    return new MinMaxResult(min, max);
+}
+
+public class VL_01_MinMax6 {
+    static MinMaxResult minMax(int[] field){
+        int min = field[0];
+        int max = field[0];
+        for(int i : field){
+            if(i < min)
+                min = i;
+            else if(i > max)                        // Einzige Änderung
+                max = i;
+        }
+        return new MinMaxResult(min, max);
+    }
+    public static void main(String[] args) {
+        int[] field = VL_01_MinMaxUtils.genArray(10);
+        System.out.println("Start Array");
+        VL_01_MinMaxUtils.print(field);
+        MinMaxResult res = minMax(field);
+        System.out.println("nach Minimum/Maximum Suche");
+        VL_01_MinMaxUtils.print(field);
+        System.out.println("Ergebnis");
+        System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+    }
+}
+
+- Auch MinMax6 funktioniert. Für echte Messungen müssen die Arrays deutlich größer sein.
+- hierzu wird die Zeit gemessen, die die Verfahren 2-6 für unterschiedlich große Arrays brauchen.
+- Arraygröße startet bei 100  und wird in jedem Schritt verdoppelt bis zu einer Größe von 400.000.000 (400 Millionen)
+
+public class VL_01_MinMaxTest {
+    static void minMax(int which, int[] field){
+        if(which == 2 && field.length > 400000)                                 // Selecion Sort nur für Arrays < 400.000 verwendbar
+            System.out.println("\tZeit in mSec.: zu lang für MinMax" + which);
+        else {
+            long lStart = System.currentTimeMillis();                           // die aktuelle Zeit in Millisekunden
+            switch(which){
+                case 2: VL_01_MinMax2.minMax(field); break;
+                case 3: VL_01_MinMax3.minMax(field); break;
+                case 4: VL_01_MinMax4.minMax(field); break;
+                case 5: VL_01_MinMax5.minMax(field); break;
+                case 6: VL_01_MinMax6.minMax(field); break;
+            }
+            long lEnd = System.currentTimeMillis();                             // die aktuelle Zeit nach der Berechnung
+            System.out.println("\tZeit in mSec.:" + (lEnd - lStart) + " für MinMax" + which);
+                                                // Differenz der beiden Zeitpunkte ergibt die Zeitdauer
+        }
+    }
+    public static void main(String[] args){
+        for(int size = 100; size < 400000000; size *= 2){
+            int[] field = VL_01_MinMaxUtils.genArray(size);
+            System.out.println("Arraylänge: " + field.length);
+            for(int which = 2; which < 7; ++which)
+                minMax(which, field);
+        }
+    }
+}
+
+Abschließende Diskussion:
+- Version 2 (Selection Sort): braucht bei doppelt so großen Array viermal soviel Zeit
+- Version 3 (Array.sort):     braucht bei doppelt so großen Array etwa doppelt soviel Zeit
+                              (in Wirklichkeit ist es ein bisschen mehr, aber die Zeitmessung ist zu ungenau)
+- Version 4-6 (ohne Sortierung): brauchen nicht messbar mehr Zeit und es gibt auch keine Unterschiede zwischen ihnen
+WICHTIG: die Zeitmessung ist recht ungenau. Alle Angaben unter 1000 ms ( = 1 Sekunde) sind "Schmutz"
+FRAGE:
+- Wie kann man solche Algorithmen bzgl. ihrer Geschwindigkeit bewerten, ohne sie laufen zu lassen?
+- Kann man die Laufzeit ausrechnen?
+________________________________________________________________________________________________________________________
+            Vorlesung 2 - Bewertung von Algorithmen
+- die MiMax Beispiele: Unterschiedliche Verfahren für selbes Ergebnis benötigen unterschiedliche Laufzeiten
+- bei Untersuchung:
+    1. Nicht konrete Zeit interessat,sondern
+    2. Veränderung der Laufzeit, wenn Eingabe sich ändert
+- "Eine konkrete Laufzeit wäre mit der nächsten Rechnergeneration wieder hinfällig"
+
+- Für die Komplexitätsbetrachtung reicht es, die einzelnen Schritte zu zählen
+public static void doit(int n,int m) {
+    int j = 0; // 1. Zeitschritt
+    System.out.println(n); // 2. Zeitschritt
+    if (n < m) // 3. Zeitschritt
+        j = m; // 4. Zeitschritt
+    else // oder
+        j = n * 2 / m; // 4. Zeitschritt
+    System.out.println(j); // 5. Zeitschritt
+}
+
+    static int cnt = 0;
+    public static void doit(int n,int m) {
+        ++cnt; // 1. Zeitschritt
+        ++cnt; // 2. Zeitschritt
+        ++cnt; if (n < m) // 3. Zeitschritt
+            ++cnt; // 4. Zeitschritt
+        else // oder
+            ++cnt; // 4. Zeitschritt
+        ++cnt; // 5. Zeitschritt
+    }
+d.h. doit(int n, int m) braucht immer 5 Schritte, unabhängig von n oder m
+________________________________________________________________________________________________________________________
+            Bewertung von Algorithmen: Beispiel
+- betrachten wir selection sort:
+
+static void selection_sort(int[] field) {
+    for(int i1 = 0;i1 < field.length - 1;++i1) { // wiederhole alles „field.length“ mal
+        int min = i1; // 1 Schritt
+        for(int i2 = i1 + 1;i2 < field.length;++i2) { // wiederhole alles „field.length-i1“ mal
+            if (field[i2] < field[min]) // 1 Schritt
+                min = i2; // 1 Schritt
+        }
+        swap(field, min, i1); // 3 Schritte (siehe unten)
+    }
+}
+static void swap(int[] field,int iPos1,int iPos2) {
+    int tmp = field[iPos1]; // 1. Schritt
+    field[iPos1] = field[iPos2]; // 2. Schritt
+    field[iPos2] = tmp; // 3. Schritt
+}
+
+static int selection_sort_analysis(int[] field) {
+    int cnt = 0;
+    for(int i1 = 0;i1 < field.length - 1;++i1) {
+        ++cnt; // int min = i1;
+        for(int i2 = i1 + 1;i2 < field.length;++i2) {
+            ++cnt; // if (field[i2] < field[min])
+            ++cnt; // min = i2;
+        }
+        cnt += 3; // swap(field, min, i1);
+    }
+    return cnt;
+}
+
+Für die Komplexität reicht es, die einzelnen Schritte zu zählen
+
+- trägt man ausgeführte Schritte (Y-Achse) über die Länge des Eingabearrays (X-Achse) ein, ergibt sich folgendes Bild:
+- der Verlauf ist identisch zu der quadratischen Funktion f(x) = x^2
+- "Der Selection Sort hat ein quadratisches Laufzeitverfahren!"
+________________________________________________________________________________________________________________________
+            Bewertung von Algorithmen: 2. Beispiel
+- In Prog. 1 gab es die folgenden rekursiven Funktionen:
+static void rec_double(int n){ // Funktion ruft sich zweimal rekursiv auf
+    if(n > 0){
+        rec_double(n-1);
+        System.out.println(n);
+        rec_double(n-1);
+    }
+}
+// Exponentieller Verlauf
+
+static void rec_first(int n) {  // Funktion ruft sich einmal zum Anfang rekursiv auf
+    if (n > 0) {
+        rec_first(n-1);
+        System.out.println(n);
+    }
+}
+// Linearer Verlauf
+static void rec_last(int n) {   // Funktion ruft sich einmal zum Ende rekursiv auf
+    if (n > 0) {
+        System.out.println(n);
+        rec_last(n-1);
+    }
+}
+// Linearer Verlauf
+
+- d.h. die rec_double Methode mit ihren 2 rekursiven Aufrufen hat einen exponentiellen Verlauf,
+während die beiden rec-first und rec_last einen linearen Verlauf haben.
+- der SelectionSort hatte einen quadratischen Laufzeitverfahren
+________________________________________________________________________________________________________________________
+        Bewertung  von Algorithmen: nxlog(n)
+- neben dem linearen, quadratischen und exponentiellen
+  Laufzeitverhalten findet man oft noch das folgende
+  Verhalten
+
+static void rec_double(int n) {
+    if (n > 0) {
+        rec_double(n/2);
+        for(int i = 0;i < n;++i)
+            System.out.print(i + " ");
+        System.out.println();
+        rec_double(n/2);
+    }
+}
+// zwei rekursive Aufrufe, in der Mitte ein lineares Verhalten, aber
+// die rekursiven Aufrufe halbieren das Argument
+
+- betrachtet man das Laufzeitverhalten, so stellt man KEINEN exponentiellen Verlauf fest
+
+static long rec_double_analysis(int n) {
+    long cnt = 0;
+    if (n > 0) {
+        cnt += rec_double_analysis(n/2);
+        for(int i = 0;i < n;++i)
+            ++cnt; // System.out.print(i + " ");
+        ++cnt; // System.out.println();
+        cnt += rec_double_analysis(n/2);
+    }
+    return cnt;
+}
+- wenn die Eingabe n verdoppelt wird, erhöhen sich die Schritte EIN WENIG MEHR als doppelt so viel
+________________________________________________________________________________________________________________________
+        Vergleich von Funktionen
+- die MinMax1 Version hat das Array zu Beginn nicht kopiert
+- die MinMax2 Version schon
+- Frage:    Braucht MinMax2 mehr Zeit als MinMax1 ?
+- Antwort:  Ja, aber am Ende für große Eingaben spielt dieser Mehraufwand keine Rolle !!!
+
+- simple und complex sind für große n nahezu identisch, nur faster scheint schneller zu sein, aber
+- für große n ist 2 * (n^2-n/2) = n^2 - n fast gleich zu n^2 und 2n + n^2
+________________________________________________________________________________________________________________________
+        O-Notation
+- Dominierende Terme:
+  Bei großen Werten von n (n Steht für Eingabe -> bei großen Eingaben) spielt es fast keine Rolle,
+  ob zu einer quadratischen Funktion lineare Termene hinzugefügt werden oder abgezogen werden.
+  Sprich: Bei der Analyse der Komplexität sind die größten Terme im Ausdruck entscheident, nicht die kleinen
+
+- O-Notation:
+  Groß-O-Notation wird verwendet, um obere Grenze der Laufzeit oder des Speicherplatzes eines Algorithmus zu beschreiben.
+  Es ist eine asymtotische Notation, die das Wachstumsverhalten einer Funktion angibt
+
+- O(f) Definition:
+  Für eine Funktion f aus der Menge F bezeichnet O(f) die Menge aller Funktionen g aus F, für die es eine positive Konstante c
+  und eine natürliche Zahl n0 gibt, so dass für alle n >= n0 gilt:
+  g(n) =< c x f(n)
+  Dies bedeutet, dass g(n) asymptotisch durch f(n) nach oben beschränkt ist
+
+Zentrale Aussage:
+Groß-O-Notation ermöglicht, "wesentliche" Eigenschaften der Laufzeit eines Algorithmus zu beschreiben, ohne sich in Details zu verlieren.
+Hierdurch sollen Algorithmen basierend auf ihrer grundlegenden Leistungscharakteristik klassifiziert werden, insbesondere für große Eingabegrößen.
+
+Wichtig:
+Die Funktion f(n) = 2^n ist eine Exponentialfunktion
+Die Funktion g(n) = n^3 ist eine kubische Funktion, oder eine Funktion 3. Grades (n. Grades).
+
+Eine Exponentialfunktion wächst immer deutlich schneller als eine Funktion n. Grades (z.B. quadratische Funktion, kubische Funktion, etc.)
+- Exponentialfunktion ist dominanter als Funktion n. Grades
+- f(n) = 2^n        ist dominanter als      g(n) = n^3
+________________________________________________________________________________________________________________________
+        O-Notation: weitere Überlegungen
+Zusammenfassung:
+Die Komplexitätsklasse einer Funktion orientiert sich nach der am stärksten wachsenden Teilfunktion
+
+Beispiel:
+f(n) = 1000 x n^3 + 500000 x n^2 + 7600 x n             liegt in O(n^3)
+f(n) = 1000 x n^3 + (2^n/500.000) + 7600 x n            liegt in O(2^n)
+f(n) = 1000 x n   + 1243546456                          liegt in O(n)
+________________________________________________________________________________________________________________________
+        Übliche Komplexitätsklasse
+- im wesentlichen haben wir es mit den folgenden Komplexitätsklassen zu tun:
+- O(1)              Zugriff auf ein beliebiges Arrayelement
+- O(log2log2(n))    Interpolationssuche
+- O(log2(n))        Binäre Suche
+- O(n)              Zugriff auf ein beliebiges Listenelement
+- O(n x log2(n))    gute Sortierverfahren
+- O(n^2)            schlechte Sortierverfahren
+- O(2^n)            das SAT Problem, eigentlich fast alles, was interessant ist
+________________________________________________________________________________________________________________________
+        Vorlesung 3 - Bewertung von einfachen Sortierverfahren
+- in Prog. 1 - verschiedene einfache Sortierverfahren vorgestellt
+    -   Selection Sort
+    -   Insertion Sort
+    -   Bubble Sort
+    -   Distribution Counting
+- diese sollen jetzt untersucht und ihre Komplexität abgeschätzt werden
+________________________________________________________________________________________________________________________
+Selection Sort:
+static void sort(int[] field){
+    for(int i1 = 0; i1 < field.length - 1; ++i1){
+        int min = i1;   // min merkt sich immer die Position des kleinsten Elements
+        for(int i2 = i1 + 1; i2 < field.length; ++i2){
+            if(field[i2] < field[min])
+                min  = i2;
+        }
+        swap(field, min, i1);
+    }
+}
+static void swap(int[] field, int iPos1, int iPos2){
+    int tmp = field[iPos1];
+    field[iPos1] = field[iPos2];
+    field[iPos2] = tmp;
+}
+
+Selection Sort: Analyse
+Laufzeit: 1. Durchlauf: n-1 Schritte
+          2. Durchlauf: n-2 Schritte
+          3. Durchlauf: n-3 Schritte
+          ...
+          insgesamt: (n^2 - n) / 2
+          _______________________________________
+          Warum kommt diese Formel zustande?
+          - n^2: Dies repräsentiert die Summe, wenn man jedes Element n Mal mit jedem anderen verglechen würde (ohne die Anpassung für bereits sortierte Teile)
+          - -n : Dies korrigiert die Überzählung, indem die Vergleiche entlang der Hauptdiagonale (wo Elemente mit sich selbst verglichen würden) abgezogen werden.
+          - /2 : Da jeder Vergleich zweimal gezählt wird (einmal für jedes Element), muss die Gesamtzahl der Vergleiche durch zwei geteilt werden.
+          _______________________________________
+          O(n^2) (zwei ineinander geschachtelte for-Schleifen)
+________________________________________________________________________________________________________________________
+Insertion Sort:
+static void insertion_sort(int[] field){
+    for(int i1 = 1; i1 < field.length; ++i1){
+        int val = field[i1];                    // val ist das Element, das eingefügt werden soll
+        int i2 = i1;
+        while(i2 > 0 && field[i2 - 1] > val){   // verschiebe die bereits sortierten Elemente, bis val richtig platziert ist
+            field[i2] = field[i2 - 1];
+            --i2;
+        }
+        field[i2] = val;                        // speichere val an dem neu geschaffenen Platz ab
+    }
+}
+
+Insertion Sort: Analyse
+Laufzeit: 1. Durchlauf: maximal 1 Schritt
+          2. Durchlauf: maximal 2 Schritte
+          3. Durchlauf: maximal 3 Schritte
+          ...
+          insgesamt: (n^2 - 1) / 2
+          O(n^2) (zwei ineinander geschachtelte Schleifen (for und while))
+
+Was passiert bei Insertion Sort für dieses Array? [5,9,34,42,102]
+Laufzeit:       1. Durchlauf: 1 Schritt
+                2. Durchlauf: 1 Schritt
+                3. Durchlauf: 1 Schritt
+                ...
+                insgesamt: n
+                O(n) (nur äußere for-Schleife)
+                d.h.: Laufzeit hängt stark von der Vorsortierung ab!
+________________________________________________________________________________________________________________________
+Bubble Sort:
+static void bubble_sort(int[] field){
+    for(int i1 = 1; i1 < field.length; ++i1){           // i2 läuft immer über das Array, lässt dabei immer ein Element aus
+        for(int i2 = 0; i2 < field.length-i1; ++i2){
+            if(field[i2] > field[i2 + 1])               // geeignet für externes Sortieren, da nur sequentiell aif die Elemente zugegriffen wird (nach i2 kommt i2 + 1)
+                swap(field, i2, i2+1);                  // sind 2 aufeinanderfolgende Elemente nicht sortiert, werden sie vertauscht
+        }
+    }
+}
+
+Bubble Sort: Analyse
+Laufzeit:       1. Durchlauf: n-1 Schritte
+                2. Durchlauf: n-2 Schritte
+                3. Durchlauf: n-3 Schritte
+                ...
+                insgesamt: (n^2 - 1) / 2
+                O(n^2) (zwei ineinander geschachtelte for-Schleifen)
+
+Bubble Sort: Optimierung
+static void bubble_sort_opt(int[] field){
+    for(int i1 = 1; i1 < field.length; ++i1){
+        boolean bAtLeastOneSwap = false;        // merkt sich, ob wenigstens ein swap ausgeführt wurde
+        for(int i2 = 0; i2 < field.length-i1; ++i2){
+            if(field[i2] > field[i2 + 1]){
+                swap(field, i2, i2 + 1);
+                bAtLeastOneSwap = true;         // ja, es ist ein swap ausgeführt worden, das Array ist noch nicht sortiert
+            }
+        }
+        if(!bAtLeastOneSwap)                    // wenn im letzten Durchlauf kein swap ausgeführt wurde, sind wir fertig
+            return;
+    }
+}
+
+Was passiert beim optimierten Bubble Sort für dieses Array? [5,9,34,102]
+1. Durchlauf: n Schritte, kein swap,
+   Abbruch, also: O(n)
+________________________________________________________________________________________________________________________
+Distribution Counting:
+static void distribution_counting(int[] field, int m){
+    int[] count = new int[min];                 // lege zusätzliches Feld an
+    for(int i = 0; i < field.length; ++i)
+        ++count[field[i]];                      // zähle die Einträge
+    for(int i1 = 0; i2 = 0; i1 < count.length; ++i1){
+        for(int i3 = 0; i3 < count[i1]; ++i3)   // speichere die Einträge aus count gezielt wieder in field ab
+            field[i2++] = i1;
+    }
+}
+
+Distribution Count: Analyse
+static void distribution_counting(int[] field, int m){
+    int[] count = new int[min];                 // O(n)
+    for(int i = 0; i < field.length; ++i)
+        ++count[field[i]];
+    for(int i1 = 0; i2 = 0; i1 < count.length; ++i1){
+        for(int i3 = 0; i3 < count[i1]; ++i3)
+            field[i2++] = i1;                   // ???
+    }
+}
+
+Überlegung:
+- die äußere Schleife wird count.length mal durchlaufen (also m)
+- die innere Schleife wird sooft durchlaufen, so viele count[i1] Zahlen es in der zu sortierenden Folge gibt
+- alle count[i1] Zahlen für alle Einträge können aber nicht mehr als die Anzahl der zu sortierenden Zahlen sein
+- d.h., die Komplexität und damit Gesamtkomplexität ist O(n)
+________________________________________________________________________________________________________________________
+Zusammenfassung
+
+                        Durchschnitt:   -   vorsortierte Eingabe (Best Case)
+Selection Sort          O(n^2)              O(n^2)
+Insertion Sort          O(n^2)              O(n)
+Bubble Sort             O(n^2)              O(n^2)
+optimierte Bubble Sort  O(n^2)              O(n)
+Distribution Counting   O(n)                O(n)
+
+Bewertung: dies sind alles schlechte Sortierverfahren, die man nicht verwenden sollte.
+Ausnahme:  Distribution Counting, das ist aber nur sehr sehr selten anwendbar.
+________________________________________________________________________________________________________________________
+Beispiel 18
+
+package vl_algo;
+class Pair extends Object{
+    int i;
+    char c;
+    Pair(int i, char c){
+        this.i = i;
+        this.c = c;
+    }
+    public String toString(){
+        return i + " " + c;
+    }
+}
+public class VL_03_Beispiel18 {
+    int value;
+    public VL_03_Beispiel18(){
+        value = 42;
+    }
+    public Pair getValue(char ch){
+        return new Pair(value, ch);
+    }
+    public static void main(String[] args){
+        VL_03_Beispiel18 b = new VL_03_Beispiel18();
+        System.out.println(b.getValue('?'));
+    }
+}
+________________________________________________________________________________________________________________________
+Innere Klassen
+
+Frage: Muss die Klasse Pair an dieser Stelle deklariert sein?
+Antwort: Nein, sie kann auch innerhalb von der Klasse Beispiel18 deklariert sein.
+         Innere Klassen sind Klassen, die innerhalb einer anderen Klasse oder eines Blocks deklariert werden.
+
+package vl_algo;
+public class VL_03_Beispiel18_1 {
+    int value;
+    class Pair extends Object{
+        int i; char c;
+        Pair(int i, char c){
+            this.i = i; this.c = c;
+        }
+        public String toString(){
+            return i + " " + c;
+        }
+    }
+    public VL_03_Beispiel18_1(){
+        value = 42;
+    }
+    public Pair getValue(char ch){
+        return new Pair(value, ch);
+    }
+    public static void main(String[] args){
+        VL_03_Beispiel18_1 b = new VL_03_Beispiel18_1();
+        System.out.println(b.getValue('?'));
+    }
+}
+
+Es werden vier verschiedene Anwendungen von inneren Klassen unterschieden:
+1. geschachtelte Top-Level Klassen
+2. Elementklassen
+3. Lokale Klassen
+4. Anonyme Klassen
+________________________________________________________________________________________________________________________
+Geschachtelte Top-Level Klassen
+
+class A{
+    static class B{
+        ...
+    }
+    ...
+}
+class Beispiel20{
+    ...
+    public static void main(String[] args){
+        A.B b = new A.B();
+    }
+}
+
+Die Klasse B ist in A geschachtelt, aber dennoch auf der Topebene zu verwenden,
+da sie static in A deklariert ist.
+________________________________________________________________________________________________________________________
+Elementklassen
+
+class A{
+    class B{
+        ...
+    }
+    ...
+}
+class Beispiel20{
+    ...
+    public static void main(String[] args){
+        A.B b = new A.B(); // Geht nicht
+    }
+}
+
+Die Klasse B ist in A geschachtelt und kann auf der Ebene nicht verwendet werden,
+da sie nicht static deklariert ist.
+
+package vl_algo;
+public class VL_03_Beispiel19 {
+    int value;
+    class Dummy extends Object{
+        public String toString(){
+            return Integer.toString(value);     // Objekte von Elementklassen können auf ihre Objektvariablen ihrer umschließenden Klassen zugreifen
+        }
+    }
+    public VL_03_Beispiel19(int i){
+        value = i;
+    }
+    public Dummy getValue(){
+        return new Dummy();
+    }
+    public static void main(String[] args){
+        VL_03_Beispiel19 b1 = new VL_03_Beispiel19(23);
+        VL_03_Beispiel19 b2 = new VL_03_Beispiel19(42);
+        System.out.println(b1.getValue());
+        System.out.println(b2.getValue());
+    }
+}
+________________________________________________________________________________________________________________________
+Lokale Klassen
+
+class A{
+    void doit(){                        // Die Klasse B ist in der Methode doit geschachtelt
+        class B{                        // und kann nur innerhalb der Methode verwendet werden
+            ...
+        }
+        B b = new B();
+        ...
+    }
+    public void test(String[] args){
+        B b = new B();                  // Das funktioniert nicht
+    }
+...
+}
+________________________________________________________________________________________________________________________
+Anonyme Klassen
+
+Frage:
+- Braucht man die Klasse Dummmy eigentlich?
+- Braucht man den Namen "Dummy"?
+- Wo braucht man den Namen "Dummy"?
+
+Idee:
+Deklariere die Klasse dort, wo sie einmal gebraucht wird.
+Dann muss die Klasse keinen Namen haben.
+
+package vl_algo;
+public class VL_03_Beispiel_19_1 {
+    int value;
+
+    public VL_03_Beispiel_19_1(int i) {
+        value = i;
+    }
+
+    public Object getValue() {
+        return new Object() {
+            public String toString() {
+                return Integer.toString(value);
+            }
+        };
+    }
+
+    public static void main(String[] args) {
+        VL_03_Beispiel_19_1 b1 = new VL_03_Beispiel_19_1(23);
+        VL_03_Beispiel_19_1 b2 = new VL_03_Beispiel_19_1(42);
+        System.out.println(b1.getValue());
+        System.out.println(b2.getValue());
+    }
+}
+________________________________________________________________________________________________________________________
+Anonyme Klassen und Interfaces
+
+Normale Klasse A
+class A extends B{
+    void doit(){...}
+}
+...
+print(new A());
+
+Anonyme Klasse
+print(new B(){
+    void doit(){...}
+});
+
+Normale Klasse A
+class A implements C{
+    void doit(){...}
+}
+...
+print(new A());
+
+Anonyme Klasse
+print(new C(){
+    void doit(){...}
+});
+________________________________________________________________________________________________________________________
+            Vorlesung 4
+konzeptionelle Nachteile bisher vorgestellter Sortierverfahren:
+- Insertion-, Selection- und Bubblesort: langsam, sprich O(n^2)
+- Distribution Counting: nur für eine spezielle Anwendung
+        Lösung: andere Algorithmen
+implementationstechnische Nachteile der bisherigen Implementierungen:
+- funktionieren nur für int-Arrays
+- für Arrays anderen Typs müssen sie neu implementiert werden
+        Lösung: Generics und Interfaces
+________________________________________________________________________________________________________________________
+            Generics: kurze Einführung
+Generics:   Parametisierung von Klassen und Methoden in Typen
+Aufgabe:    Implementierung einer Klasse, die sich zwei beliebigen Werte von beliebigen Typ (= Object) merkt
+
+package vl_algo;
+public class VL_04_Pair1 {
+    private Object m_o1, m_o2;
+    public VL_04_Pair1(Object o1, Object o2){
+        this.m_o1 = o1; this.m_o2 = o2;
+    }
+    Object get1() {return m_o1;}
+    Object get2() {return m_o2;}
+    public static void main(String[] args){
+        VL_04_Pair1 p = new VL_04_Pair1(2,'?');     // Autoboxing: int -> Integer
+                                                    // und char -> Character
+        System.out.println(p.get1());
+        char c = (Character) p.get2();              // *
+        double d = (Double) p.get1();               // * expliziter Typcast mit Absturz
+        System.out.println(c + " " + d);
+    }
+}
+________________________________________________________________________________________________________________________
+            Generics: kurze Einführung (Forts.)
+Ab Version 1.5 verfügbar - sehr schwache Imitation von Templates (C++)
+- Klasse Pair2 ist parametisiert in den Typen T1 und T2
+
+package vl_algo;
+public class VL_04_Pair2<T1, T2>{
+    private T1 m_o1;
+    private T2 m_o2;
+    public VL_04_Pair2(T1 o1, T2 o2){
+        this.m_o1 = o1; this.m_o2 = o2;
+    }
+    T1 get1() {return m_o1;}
+    T2 get2() {return m_o2;}
+    public static void main(String[] args){
+        VL_04_Pair2<Integer, Character> p = new VL_04_Pair2<Integer, Character>(2, '?'); //  Bei Instanziierung: Festlegung der Typparameter
+        System.out.println(p.get1());
+        char c = p.get2();      // *
+        double d = p.get1();    // * Autoboxing: Character -> char, Integer -> int -> double
+    }
+}
+________________________________________________________________________________________________________________________
+            Generics: kurze Einführung (Forts.)
+- eine Methode, die das Minimum zweier Werte beliebigen Typs ermittelt
+        // K ist der Rückgabewert (ist natürlich vom Typ K)
+static <K> K min(K a1, K a2){ // zwei Werte a1 und a2 eines beliebigen Typs K
+    if(a1 < a2)         // Problem: <-Operator ist nicht auf einen beliebigen Typen definiert
+        return a1;
+    else
+        return a2;
+}
+- Lösung: zusätzlich ein Interface mitgeben, das beschreibt, wie zwei Werte vom Typ K verglichen werden
+
+interface Compare<T>{               // Interface mit einer Methode isLess, die besagt, ob a1 vom beliebigen Typ T kleiner als a2 ist.
+    boolean isLess(T a1, T a2);
+}
+
+static <K> K min(K a1, K a2, Compare<K> c){     // die Methode min ist von beliebigen Typ K. Das Compare Interface soll genau diesen Typ verwenden.
+    if(c.isLess(a1, a2))    // isLess Methode des Interfaces Compare ersetzt den <-Operator
+            return a1;
+    else
+            return a2;
+}
+________________________________________________________________________________________________________________________
+            Generics: kurze Einführung (Beispiel)
+package vl_algo;
+interface Compare<K>{
+    boolean isLess(K a1, K a2);
+}
+class MyCompare implements Compare<Integer>{        // MyCompare implementiert den Vergleich für Integer Objekte (und nur für solche)
+    public boolean isLess(Integer a1, Integer a2){
+        return a1 < a2;
+    }
+}
+public class VL_04_Sorted2 {
+    static <K> K min(K a1, K a2, Compare<K> c){
+        if(c.isLess(a1, a2))
+            return a1;
+        else
+            return a2;
+    }
+    public static void main(String[] args){
+        System.out.println(min(3, 4, new MyCompare()));     // Beim Aufruf der min Methode muss ein MyCompare Objekt übergeben werden
+    }
+}
+________________________________________________________________________________________________________________________
+            Comparable Interface
+- anstatt des eigenen Compare Interface sollte man das vordefinierte Comparator Interface von Java verwenden
+
+package vl_algo;
+import java.util.Comparator;
+class MyCompare implements Comparator<Integer>{
+    public int compare(Integer a1, Integer a2){
+        if(a1 < a2)
+            return -1;
+        else if(a2 < a1)
+            return 1;
+        else
+            return 0;
+    }
+}
+public class VL_04_Sorted6 {
+    static <K> K min(K a1, K a2, Comparator<K> c){
+        if(c.compare(a1, a2) < 0)
+            return a1;
+        else
+            return a2;
+    }
+    public static void main(String[] args){
+        System.out.println(min(3, 4, new MyCompare());
+    }
+}
+________________________________________________________________________________________________________________________
+            Generics: kurze Einführung (Diskussion)
+- Der Aufruf von min ist ok
+- Die Definition der Klasse MyCompare wirkt fehl am Platz
+- hier könnte man eine anonmyme Klasse verwenden
+package vl_algo;
+import java.util.Comparator;
+public class VL_04_Sorted5 {
+    static <K> K min(K a1, K a2, Comparator<K> c){
+        if(c.compare(a1, a2) < 0)
+            return a1;
+        else
+            return a2;
+    }
+    public static void main(String[] args){
+        System.out.println(min(3,4,
+                new Comparator<Integer>() {     // anonyme Klasse, die das Comparator<Integer> Interface implementiert
+                    public int compare(Integer a1,Integer a2) {
+                        return a1-a2;
+                    }
+                })
+        );
+    }
+}
+________________________________________________________________________________________________________________________
+            Generics: kurze Einführung (Diskussion)
+- Viel Schreibaufwand, anonyme Klasse könnte auch vom Compiler generiert werden
+- nur a1<a2 ist neu und kann nicht vom Compiler generiert werden
+- Lösung hierzu: Lambda Ausdrücke
+
+public static void main(String[] args){
+    System.out.println(min(3, 4,
+                                new Comparator<Integer>(){                          //*
+                                    public int compare(Integer a1, Integer a2){     //* könnte vom Compiler erzeugt werden
+                                        return a1-a2;       // muss explizit programmiert werden
+                                    }
+                                }
+                           )
+                      );
+}
+________________________________________________________________________________________________________________________
+            Lamdbda Ausdrücke
+Problem mit der Klasse MyCompare und anonymen Klasse:
+- sehr viel Schreibaufwand
+- die komplette Deklaration der Klasse könnte der Compiler selber schreiben
+- die einzige Information, die der Compiler nicht kennt, ist die Anweisung des <-Operator,
+  also der Methodenrumpf
+- daher ab Java 1.8: Lambda Ausdrücke (Begriff aus der funktionalen Programmierung)
+- nur noch der Inhalt der Funktion muss implementiert werden
+- nicht mehr implementiert werden muss:
+    - Deklaration der Klasse
+    - Deklaration der überlagerten Methode
+- Lamda Ausdrücke funktionieren nur bei Interfaces, die genau eine Methode enthalten
+- sie funktionieren NICHT bei
+    - Interfaces mit mehreren Methoden
+    - Abstrakten Klassen
+    - Normalen Klassen
+- Solche Interfaces heißen "funktionale Interfaces"
+  (sie spezifizieren im Wesentlichen eine Funktion)
+
+- Lamda Ausdrücke: ein näherer Blick
+
+package vl_algo;
+interface Juhu{
+    public void doit();
+}
+public class VL_04_Lambda1 {
+    public static void main(String[] args){
+        Juhu j1 = new Juhu(){
+            public void doit(){
+                System.out.println("dies ist der alte Weg");
+            }
+        };
+        Juhu j2 = () -> System.out.println("mit Lambda Ausdruck"); // ohne Parameter müssen leere Klammern gesetzt werden
+
+        j1.doit();
+        j2.doit();
+    }
+}
+
+- die Methoden können auch mehrere Parameter enthalten
+
+package vl_algo;
+
+interface Juhu2{
+    public void doit(int i, float f);
+}
+public class VL_04_2Lambda2 {
+    public static void main(String[] args){
+        Juhu2 j1 = new Juhu2(){
+          public void doit(int i, float f){
+              System.out.println("old school: i = " + i + " f = " + f);
+          }
+        };
+        Juhu2 j2 = (i, f) -> System.out.println("Lambda: i = " + i + " f = " + f); // mehrere Parameter müssen auch in Klammern gesetzt werden
+
+        j1.doit(12, 34.6f);
+        j2.doit(5, 7.8f);
+    }
+}
+
+- mehrere Statements müssen in einem Block zusammengefasst werden
+
+interface Juhu4{
+    public void doit(int i, int j);
+}
+
+public class Lambda4{
+    public static void main(String[] args){
+        Juhu4 j = (i1, i2) ->{
+                System.out.println("jetzt kommt " + i1 + " mal die " + i2);
+                for(int i = 0; i < i1; ++i)
+                    System.out.println(i2);
+            }
+    }
+}
+
+- die Methoden können auch einen Rückgabewert haben
+
+interface Juhu3{
+    public int doit(int i, int j);
+}
+
+public class Lambda3{
+    public static void main(String[] args){
+        Juhu3 j1 = (i1, i2) -> {return i1*i2;}; // obwohl nur ein Statement (return) muss es dennoch im Block stehen
+        Juhu3 j2 = (x, y) -> x / y; // Spezialfall "Lambda Ausdrücke": das return kann weggelassen werden, dnan auch ohne Block
+
+        int a = j1.doit(12, 10);
+        int b = j2.doit(12, 5);
+    }
+}
+
+package vl_algo;
+import java.util.Comparator;
+
+public class VL_04_3Sorted3 {       // Die Klasse MyCompare fehlt komplett
+    static <K> K min(K a1, K a2, Comparator<K> c){
+        if(c.compare(a1, a2) < 0)
+            return a1;
+        else
+            return a2;
+    }
+
+    public static void main(String[] args){
+        System.out.println(min(3, 4, (a1, a2) -> a1-a2));   // Der Lambda Ausdruck, der die MyCompare Definition und die Objekterzeugung ersetzt
+    }
+}
+
+großer Vorteil: soll die min-Methode nicht mehr das Minimum, sondern das Maximum berechnen, muss nur der <-Operator durch den >-Operator ersetzt werden
+
+package vl_algo;
+import java.util.Comparator;
+public class VL_04_3Sorted4 {
+    static<K> K min(K a1, K a2, Comparator<K> c){
+        if(c.compare(a1, a2) < 0)
+            return a1;
+        else
+            return a2;
+    }
+    public static void main(String[] args){
+        System.out.println(min(3, 4, (a1, a2) -> a1-a2));   // Berechnet Minimum
+        System.out.println(min(3, 4, (a1, a2) -> a2-a1));   // Berechnet Maximum
+    }
+}
+________________________________________________________________________________________________________________________
+            MinMax Suche mit Generics
+- Durch Generics kann MinMax aus VL 1 verallgemeinert werden
+- sie funktioniert für beliebige Arrays, nicht nur für int-Arrays
+- hierzu muss MinMaxResult auf Generics umgestellt werden
+
+import java.util.Comparator;
+
+class MinMaxResult<T>{              MinMaxResult ist jezt im Typ parametisiert, den MinMaxResult in dem Objektvariablen m_Min und m_Max speichern soll.
+
+    MinMaxResult(T min, T max){
+        m_Min = min;
+        m_Max = max;
+    }
+    final T m_Min;
+    final T m_Max;
+}
+...
+________________________________________________________________________________________________________________________
+...
+public class MinMaxGeneric{
+    static<T> MinMaxResult<T> minMax(T[] field, Comparator<T> c){ // Wie werden die Elemente T verglichen?
+        T min = field[0];
+        T max = field[0];
+        for(T i : field){
+            if(c.compare(i, min) < 0)
+                min = i;
+            else if(c.compare(i, max) > 0)
+                max = i;
+        }
+        return new MinMaxResult<T>(min, max);
+    }
+
+    public static void main(String[] args){
+        Integer[] field = {23, -12, 2, 0, 79, -56};
+        MinMaxResult<Integer> res = minMax(field, (x, y) -> x - y); // Lambda Ausdruck für das Interface Comparator
+        System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+    }
+}
+
+- minMax funktioniert jetzt auch mti String Arrays
+- der Vergleich zweier Strings erfolgt hierbei mittels der compareTo Methode der String Klasse
+
+public static void main(String[] args){
+    String[] field = {"juhu", "otto", "anna", "horst", "zoe"};
+    MinMaxResult<String> res = minMax(field, (x, y) -> x.compareTo(y));
+    System.out.println("min: " + res.m_Min + "; max: " + res.m_Max);
+}
+________________________________________________________________________________________________________________________
+        Vorlesung 5 - Sortieren (die Rückkehr)
+Zur Erinnerung: Insertion Sort
+static void insertion_sort(int[] field){        // der Datentyp int muss an dieser beiden Stellen geändert werden
+    for(int i1 = 1; i1 < field.length; ++i1){
+     final int IVAL = field[i1];
+     int i2 = i1;
+     while(i2 >= 1 && field[i2 - 1] > IVAL){
+        field[i2] O= field[i2 - 1];
+        i2 = i2 - 1;
+     }
+     field[i2] = IVAL;
+    }
+}
+________________________________________________________________________________________________________________________
+        Insertion Sort mit Generics und Lambda
+static <K> void insertion_sort(K[] field, Comparator<K> c){
+    for(int i1 = 1; i1 < field.length; ++i1){
+        final K IVAL = field[i1];
+        int i2 = i1;
+        while(i2 >=  1 && c.comparator(IVAL, field[i2 - 1]) < 0){
+            field[i2] = field[i2 - 1];
+            i2 = i2 - 1;
+        }
+        field[i2] = IVAL;
+    }
+}
+...
+Integer[] f = {5, 3, -2, 0, -17};
+insertion_sort(f, (x, y) -> x-y);   // aufsteigend sortieren
+insertion_sort(f, (x, y) -> y-x);   // absteigend sortieren
+
+Nachteil:
+- ein Element kann immer nur 1 Schritt aufrücken
+- dadurch dauert es sehr lange, bis kleine Elemente von hinten nach vorne kommen
+- Ziel: das muss schneller gehen
+________________________________________________________________________________________________________________________
+        Shellsort
+Idee:
+- basierend auf Insertion Sort
+- vergleiche nicht unmittelbar benachbarte Elemente, sondern nehme welche mit großem Abstand und vergleiche diese
+- wiederhole das Vorgehen mit kleinerem Abstand
+- wenn der Abstand einmal 1 ist, ist es der normale Insertion Sort und damit ist die Folge danach sortiert
+
+schlimmster Fall für insertion Sort:
+- invertiert sortierte Liste
+
+Idee bei Shellsort:
+- betrachte Teillisten, bei der die Nachbarn nur jedes 4. Element sind und sortiere sie nach Insertion Sort
+
+Das Ergebnis des 1. Durchgangs mit 4er Abstand:
+Beobachtung:
+- diese Liste ist wesentlich sortierter, als die Anfangsliste
+- die kleinen Elemente sind von rechts nach links gewandert
+- die großen Elemente sind von links nach rechts gewandert
+- es fanden nur wenige Austausche statt
+
+Nächster Schritt:
+- mit Abstand 1 wiederholen, d.h. normalen Insertion Sort
+Ergebnis nach einem Durchlauf:
+- die Liste ist fertig sortiert
+- es musste nur jeweils 1 Element verschoben werden, d.h. hier direkter Tausch war möglich
+________________________________________________________________________________________________________________________
+        Shell Sort: Abstände
+- In diesem Beispiel wurden 2 Abstände gewählt: 4 und 1
+- Welche Abstände sollte man im allgemeinen wählen?
+- Bsp.: ..., 1093, 364, 121, 40, 13, 4, 1
+        ..., 64, 32, 16, 8, 4, 2, 1
+- Welche dieser Folgen ist besser?
+
+Ziel:
+- eine gute Durchmischung der Vergleiche
+- in verschiedenen Durchläufen sollen verschiedene Elemente verglichen werden
+- die Wahl der richtigen Abstände ist ganz entscheidend für das Laufzeitverhalten
+- es gibt keine eindeutig richtige Wahl für die Abstände
+- es gibt aber eindeutig falsche Wahlen für Abstände, z.B. 64, 32, 16, 8, 4, 2, 1 da hier immer die gleichen Elemente miteinander verglichen werden
+• also: die Folge sollte möglichst ungleichmäßig sein
+• somit werden verschiedene Elemente in den verschiedenen
+Durchläufen miteinander verglichen
+________________________________________________________________________________________________________________________
+        Shell Sort: Implementierung
+• für den Abstand wird die Variable iDist für Distanz eingeführt
+• statt des unmittelbaren Nachbarn wird der Nachbar
+genommen, der iDist entfernt liegt
+• es wird nicht mit dem 1. Element angefangen, sondern mit
+dem iDist
+
+static <K> void insertion_sort(K[] field, Comparator<K> c){
+    for(int i1 = 1*; i1 < field.length; ++i1){
+        final K IVAL = field[i1];
+        int i2 = i1;
+        while(i2 >= 1* && c.compare (IVAL, field[i1 - 1*] < 0){
+            field[i2] = field[i2 - 1*];
+            i2 = i2 - 1*;
+        }
+        field[i2] = IVAL;
+    }
+}   // diese Stellen müssen geändert werden
+- bisher läuft der Algorithmus einmal über das Feld mit dem Abstand iDist
+- iDist muss jetzt noch verringert werden, der Algorithmus muss erneut laufen
+
+static <K> void shell_sort(K[] field, Comparator<K> c){
+    int iDist = 1;
+    for(; iDist <= field.length / 9; iDist = 3 * iDist + 1){   // der Abstand wird nach jedem Durchlafu ein Drittel reduziert // im 1. Durchlauf sollen maximal 9 Elemente miteinander verglichen werden
+        for(int i1 = iDist; i1 < field.length; ++i1){
+            final K IVAL = field[i1];
+            int i2 = i1;
+            while(i2 >= iDist && c.compare(IVAL, field[i2 - iDist]) < 0){
+                field[i2] = field[i2 - iDist];
+                i2 = i2 - iDist;
+            }
+            field[i2] = IVAL;
+        }
+    }
+}
+________________________________________________________________________________________________________________________
+        Shell Sort: Analyse
+- bisher ist unklar, wie schnell Shell Sort arbeitet
+- die Geschwindigkeit hängt stark von der Folge der Abstände ab
+- die Güte der Abstände hängt aber wiederum von der Vorsortierung ab
+- in der Praxis läuft dieser Algorithmus sehr gut
+- er ist sehr einfach zu implementieren
+Frage:
+1. Ist Shell Sort stabil?
+2. Ist Shell Sort für externes Sortieren geeignet?
+________________________________________________________________________________________________________________________
+        Quicksort
+Idee:
+- eine Folge mit nur einem Element ist immer (trivialer weise) sortiert
+- hat man mehr Elemente, die zu sortieren sind, teilt man das Problem auf
+    - in eine Gruppe kommen alle großen Elemente
+    - in eine Gruppe kommen alle kleinen Elemente
+    - sortiere die beiden Gruppen je für sich
+    - danach ist die gesamte Folge sortiert
+
+Quicksort: Illustration
+Ausgangssituation:
+Zerlege gemäß der Linie:
+- alle, die größer sind gehen nach rechts
+- alle kleineren kommen nach links
+- in der Mittel bleiben die, die genauso groß sind
+
+Mache jetzt mit der linken und rechten Gruppe weiter, bis die Gruppe einelementig ist
+
+Quicksort: Implementierung
+<K> void quick_sort(K[] field, Comparator<K> c){
+    quick_sort_help(field, c,0, field.lenght-1);    // ruft Hilfsfunktion mit maximalen Grenzen auf
+}
+static<K> void quick_sort_help(K[] field, Comparator<K> c, int iLeft, int iRight){
+    final K MID = field[iLeft + iRight) / 2];   // nach MID müssen sich alle richten
+    int l = iLeft;
+    int r = iRight;
+    while(l < r){
+        while(c.compare(field[l], MID) < 0){
+            ++l;
+        }
+        while(c.compare(MID, field[r]) < 0){
+            --r;
+        }
+    }
+    if(iLeft < r)
+        quick_sort_help(field, c, iLeft, r);    // sortiere die beiden restlichen Teile wenn notwendig
+    if(iRight > l)
+        quick_sort_help(field, c, l, iRight);
+}
+
+Quicksort: Analyse
+
+Optimaler Fall:
+- field[iLeft+iRight)/2] liegt in der Mitte, d.h. es gibt genauso viele kleinere wie größere Elemente
+- d.h. nach einem Durchlauf wird das Problem der Größe N auf 2 Probleme jeweils der Größe N/2 reduziert
+- d.h. N + 2 * O(N/2) = N*log(N)
+
+Quicksort hat im Durchschnitt eine Komplexität von O(N log N)
+
+Schlechter Fall:
+- field[iLeft+iRight)/2] ist das kleinste oder größte Element
+- d.h. nach einem Durchlauf wird das Problem der Größe N auf 2 Probleme der Größe N-1 und 1 reduziert
+- d.h. N + O(N-1) + O(1) = N^2
+
+Quicksort hat im schlimmsten Fall eine Komplexität von O(N^2)
+________________________________________________________________________________________________________________________
+        Vorlesung 6
+Mergesort
+- Idee:
+    - wenn man zwei sortierte Listen hätte, dann könnte man eine neue sortierte Liste erzeugen, indem
+    - man das kleinste Element der beiden Köpfe nimmt,
+    - dieses entfernt
+    - und mit dem Rest weitermacht
+
+Merge: Implementierung
+static<K> void merge_sort2(K[] field, Comparator<K> c){
+    merge_sort_help2(field, c, 0, length-1);
+}
+
+static<K> void merge_sort_help2(K[] field, Comparator<K> c, int iLeft, int iRight){
+    if(iLeft < iRight){
+        final int MIDDLE = (iLeft + iRight) / 2; // die Mitte
+        merge_sort_help2(field, c, iLeft, MIDDLE);  // *
+        merge_sort_help2(field, c, MIDDLE + 1, iRight); // * sortiere links und rechts der Mitte
+
+        K[] tmp = (K[]) new Object[iRight - iLeft + 1]; //*
+        for(int i = iLeft; i <= MIDDLE; ++i)            //*
+            tmp[i - iLeft] = field[i];                  //*
+        for(int i = MIDDLE+1; i <= iRight; ++i)         //*
+            tmp[tmp.length-i+MIDDLE] = field[i];        //* lege eine Kopie an, drehe dabei die 2. Hälfte um
+        int iL = 0;
+        int iR = tmp.length-1;
+        for(int i = iLeft; i <= iRight; ++i)
+            field[i] = c.compare(tmp[iL], tmp[iR] < 0 ? tmp[iL++] : tmp[iR--]; // mische aus der Kopie in das Originalfeld
+    }
+}
+
+Mergesort: Analyse
+- im Gegensatz zu Quicksort wird bei Mergesort das Feld immer genau in 2 gleichgroße Teile zerlegt
+- beim Mischen wird O(N) Zeit verbraucht
+- somit ergibt sich eine Gesamtkomplexität von O(N log N)
+- der zusätzliche Speicheraufwand beträgt O(N)
+- da beim Mischen immer nur auf den Kopf von 2 Läufern zugegriffen wird, eignet sich dieses Verfahren zum externen Sortieren
+- im Durchschnitt ist das Verfahren langsamer als Quicksort
+Der Mergesort hat garantiert ein O(N log N) Verhalten
+________________________________________________________________________________________________________________________
+        Heapsort
+Sei A eine Datenstruktur mit folgenden Eigenschaften
+- bei der Initialisierung sagt man, wie viele Elemente gespeichert werden sollen
+- es gibt eine Methode insert(), der man das zu sortierende Element mitgibt
+- es gibt eine Methode remove(), die das größte Element zurückliefert und dieses auch noch entfernt
+Dann könnte man wie folgt sortieren:
+
+static<K> void heap_sort_1(K[] field, Comparator<K> c){ // field enthält N Elemente, die zu sortieren sind
+    A<K> a = new A<K>(field.length);
+    for(int i = 0; i < field.length; ++i)   // füge alle Elemente ein
+        a.insert(field[i], c);
+    for(int i = 0; i < field.length; ++i)
+        field[field.length - i - 1] = a.remove(c);  // lese alle Elemente sortiert aus (mit dem größten beginnend)
+}
+Gesucht ist eine solche Datenstruktur A
+
+Möglichkeiten für eine solche Datenstruktur A:
+- ein unsortiertes Array
+    - insert erfolgt am Ende: Komplexität O(1)
+    - remove durchläuft die Liste und sucht das Maximum: Komplexität O(N)
+    - dies würde dem Selection Sort entsprechen: Komplexität O(N^2) (weil N-mal remove: N * O(N) = O(N^2))
+
+- ein sortiertes Array
+    - insert erfolgt sortiert in das Array: Komplexität O(N)
+    - remove entfernt das letzte Element: Komplexität O(1)
+    - dies würde dem Insertion Sort entsprechen: Komplexität O(N^2) (weil N-mal insert: N * O(N) = O(N^2))
+
+andere Möglichkeiten für eine solche Datenstruktur A:
+- ein binärer Baum mit der folgenden Eigenschaft
+- jeder Knoten enthält einen zu sortierenden Schlüssel
+- der Schlüssel eines jeden Knoten ist größer oder gleich der Schlüssel seiner Söhne
+- der Baum ist ausgeglichen, d.h. der Unterschied zwischen dem längsten und dem kürzesten Pfad
+von der Wurzel zu den Blättern beträgt maximal 1
+- eine solche Datenstruktur nennt man Heap (siehe Graphentheorie)
+________________________________________________________________________________________________________________________
+        Heapsort (Fort.)
+Beispiel für einen solchen Baum/Heap:
+- jder Knoten enthält einen Schlüssel, der größer als die seiner Söhne sind
+- die Länge der Pfade zu den Blättern unterscheiden sich maximal um 1
+- wenn bekannt, wie viele Knoten maximal abgespeichert werden, könenn der Baum in einem Array abgespeichert werden
+- von einem Knoten mit Index k wird auf die Söhne mittels 2*k+1 und 2*k+2 zugegriffen
+- von einem Knoten mit Index k wird auf den Vater mittels (k-1)/2 zugegriffen
+
+Implementieren eines Heaps für Comparable-Werte:
+class Heap<K>{
+    public Heap(int iSize){
+        m_iNext = 0;
+        m_Keys = (K[])new Object[iSize];
+    }
+    private int m_iNext;    // der nächste freie Index
+    private K[] m_Keys;     // die einzelnen Schlüssel
+}
+
+Einfügen eines Elements in einen solchen Baum:
+- das neue Element wird am Ende des Arrays, sprich unten im Baum eingefügt
+- dadurch verliert der Baum u.U. seine Eigenschaft, dass alle Knoten größere Schlüssel als ihre Söhne haben
+- solche Schlüssel müssen dann nach oben wandern
+- das nach-oben-wandern wird von der folgenden Methode upheap erledigt
+
+private void upheap(int iIndex, Comparator<K> c){
+    K k = m_Keys[iIndex];
+    while(iIndex != 0 && c.compare(k_Keys[(index-1)/2],k) < 0){
+        m_Keys[iIndex] = m_Keys[(iIndex-1)/2];
+        iIndex = (index-1)/2;
+    }
+    m_Keys[iIndex] = k;
+}
+
+- basierend auf der upheap Methode kann die Insert Methode wie folgt implementiert werden:
+
+public void insert(K key, Comparator<K> c){
+    m_Keys[m_iNext] = key;
+    upheap(m_iNext, c);
+    ++m_iNext;
+}
+
+- zunächst wird das neue Element am Ende eingefügt
+- dann wird die damit verbundene Unordnung wieder hergestellt
+- am Ende wird der nächste freie Index um 1 erhöht
+
+- die remove Methode soll das größte Element zurückliefern
+- und es gleichzeitig löschen:
+- das größte Element ist an der Spitze
+- um es zu löschen, wird das letzte Element an dessen Stelle gesetzt.
+- der resultierende Baum ist nicht mehr korrekt
+- die Spitze wird jetzt i.d.R. nicht mehr größer sein als die beiden Söhne
+- solche Elemente müssen jetzt nach unten wandern
+- ein Knoten wird dazu mit dem maximalen Sohn ausgetauscht
+
+dieser Baum ist wieder ausgeglichen:
+- das nach-unten-wandern wird von downheap erledigt
+
+private void downheap(int iIndex, Comparator c){
+    K k = m_Keys[iIndex];
+    while(iIndex < m_iNext / 2){
+        int iSon = 2 * iIndex + 1;
+        if(iSon < m_iNext-1 && compare(m_Keys[iSon], m_Keys[iSon + 1]) < 0)
+            ++iSon;
+        if(!(c.compare(k, m_Keys[iSon]) < 0))
+            beak;
+        m_Keys[iIndex] = m_Keys[iSon];
+        iIndex = iSon;
+    }
+    m_Keys[iIndex] = k;
+}
+
+- basierend auf der downheap Methode kann die Remove Methode wie folgt implementiert werden:
+
+public K remove(Comparator<K> c){
+    K res = m_Keys[0];
+    m_Keys[0] = m_Keys[--m_iNext];
+    downheap(0, c);
+    return res;
+}
+
+- zunächst wird das erste (größte) Element zwischengespeichert
+- dann wird das letzte Element an die vorderste Front gestellt
+- der inkonsistente Zustand wird durch das Hinunterwander des 1. Elements wieder korrigiert
+- mit den beiden Methoden insert und remove ist jetzt ein Sortierverfahren implementiert
+- jede der beiden Operationen benötigt O(log N) Schritten, da der Binärbaum ausgeglichen ist
+- somit ist die Gesamtlaufzeit O(N log N)
+- leider wird ein zusätzlicher Platz von O(N) benötigt
+
+Heapsort braucht garantiert nur O(N log N) Zeit, ist im Durchschnitt aber ein bisschen langsamer als Quicksort
+
+static<K> void heap_sort(K[] field, Comparator<K> c){
+    Heap<K> a = new Heap<K>(field.length);
+    for(int i = 0; i < field.lengtn; ++i)
+        a.isert(field[i], c);
+    for(int i = 0; i < field.length; ++i)
+        field[field.length - i - 1] = a.remove(c);
+}
+________________________________________________________________________________________________________________________
+        Vektoren
+- in Java wie in C/C++: Arrays haben eine statische Größe, die am Anfang angegeben werden muss.
+- die Größe ändert sich im Nachhinein nicht
+- Vektoren haben dynamische Größe, können während Programmablauf größer werden, werden implementiert durch Klasse: Vector & ArrayList
+
+public class MyVector{
+    public MyVector(int initialCapacity, int capacityIncrement);
+    public MyVector(int initialCapacity);
+    public MyVector();
+    public void push_back(Object obj);
+    ...
+}
+- initialCapacity bestimmt die initiale Größe
+- capacityIncrement bestimmt, um wie viele Einheiten der Vektor vergrößert werden soll, wenn er voll ist und ein weiteres Element eingefügt werden soll
+- wird capacityIncrement nicht angegeben oder auf 0 gesetzt, wird der Vektor i

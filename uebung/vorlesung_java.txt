@@ -1,0 +1,1810 @@
+Programmierung II - Java Swing und ein wenig Threads (Nebenläufigkeit)
+
+Ziel der Vorlesung:
+- Programmierung graphischer Oberflächen in Java mit Swing
+- Threads
+- einfache Netzwerkprogrammierung
+
+Parallel in Algorithmen:
+- Sortierverfahren
+- dynamische Datenstrukturen (Vektoren und Listen)
+-   Suchverfahren (Bäume und Hashing)
+________________________________________________________________________________________________________________________
+                Vorlesung 1 - Graphikprogrammierung: Motivation
+Aufgabe: Text ausgeben auf der Konsole
+    System.out.println("Das war einfach.");
+Aufgabe: Text ausgeben in einem eigenen Fenster
+-   Wie wird ein Fenster erzeugt?
+-   Wie wird der Text ausgegeben?
+-   Wo wird der Text ausgegeben?
+-   Welche Farbe hat er, welcher Font wird verwendet?
+-   Was passiert, wenn das Fenster geschlossen und wieder geöffnet wird?
+
+Aufgabe: einen roten Kreis in einem eigenen Fenster zeichnen
+- wieder: Wie wird ein Fenster erzeugt?
+- wieder: Was passiert, wenn das Fenster geschlossen und wieder geöffnet wird?
+- Gibt es einen Befehl für Kreise, oder mus jeder Punkt berechnet werden?
+- Wie wird die Farbe gesetzt?
+
+Lösungsansätze in Java
+Verschiedene Frameworks für Grafikprogrammierung
+- Abstract Windowing Toolkit (AWT)
+- Swing
+- SWT
+- Java FX
+
+Beispiel 1
+
+Fähigkeiten von Swing:
+- graphische Primitivoperationen zum Zeichnen und Ausgeben von Text
+- Steuerung des Programmablaufs mittels Maus-, Tasten- und Fensterevents
+- einfache und komplexe Dialogelemente
+- komplexere graphische Operationen für Bitmaps und Sound
+
+import javax.swing.*;
+class VL_01_Beispiel1 {
+    public static void main(String[] args){
+        JFrame frame = new JFrame("Mein erstes Fenster");
+        frame.setSize(400,300);
+        frame.setVisible(true);
+    }
+}
+
+Erläuterung:
+1. Importieren des Graphikpakets: import javax.swings.*;
+2. Anlegen eines Frames:          new JFrame("Mein erstes Fenster");
+3. Setzen der Größe:              frame.setSize(400,300);
+4. Sichtbar machen:               frame.setVisible(true);
+
+Swing: Schließen von Fenstern
+- Das Verhalten des Schließen-Buttons kann eingestellt werden
+- Mittels des Befehls setDefaultCloseOperation kann zwischen den folgenden vier Verhalten unterschieden werden
+    DO_NOTHING_ON_CLOSE
+    HIDE_ON_CLOSE
+    DISPOSE_ON_CLOSE
+    EXIT_ON_CLOSE
+class Beispiel62_{
+    public static void main(String[] args) throws Exception{
+        final JFrame f = new JFrame("Juhu -- mein erstes Swing Fenster");
+        f.setBounds(100,100,400,300);
+        f.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+        f.setVisible(true);
+    }
+}
+
+- Basisklasse JWindwow
+- JFrame und JDialog abgeleitet
+- in der Regel werden nur JFrame und JDialog verwendet
+- JFrame als Hauptklasse für alle möglichen Fenster
+- JDialog wird für kurze Dialoge mit dem Benutzer verwendet
+
+Graphikkontext
+Streams für Zeichen Ein- und Ausgabe
+    System.out.println("Das war einfach");
+- out ist Objekt der Klasse PrintStream
+- bietet Möglichkeiten zum Ausgaben von Zeichen: println
+- Abstraktion von konkreten Ausgaberoutinen des BS
+    Analogen zu PrintStream ist Graphics
+
+Graphics ist verwenden zur Graphikausgabe
+    Graphics g;
+    ...
+    g.drawLine(0,0,200,100);
+-   zeichnet im Graphikkontext g eine Linie von (0,0) nach (200,100)
+    g.drawLine(x1, y1, x2, y2);
+    x1, y1 sind die Koordinaten des Startpunkts der Linie.
+    x2, y2 sind die Koordinaten des Endpunkts der Linie.
+-   Abstraktion von konkreten Ausgaberoutinen des BS:
+    wie die Line auf dem Bildschirm erscheint, ist Aufgabe von Java
+
+Hier entstehen sofort drei Fragen:
+1.  Welche Operationen gibt es für einen Graphikkontext?
+2.  Was sind das für Koordinaten (0,0) und (200,100)?
+3.  Wie hängt ein Graphikkontext mit einem Fenster zusammen?
+
+Welche Operationen gibt es für einen Graphikkontext?
+Einfache graphische Objekte können ausgegeben werden:
+-   Linien drawLine
+-   Rechtecke drawRect
+-   Rechtecke mit abgerundeten Ecken drawRoundRect
+-   Polygone drawPolygon
+-   Kreise drawOval
+-   Kreisbögen drawArc
+-   Text
+
+Zeichenbefehle der Graphics Klasse
+Linien- oder Füllmodus?
+drawLine                -   ---
+drawRect                -   fillRect
+drawRoundRect           -   fillRoundRect
+drawPolygon             -   fillPolygon
+drawPolyline            -   fillPolyline
+drawOval                -   fillOval
+drawAry                 -   fillArc
+
+Was sind das für Koordinaten (0,0) und (200,100)?
+- Graphikkontext hat ein 2-dimensionales Koordinatensystem:
+    - Ursprungspunkt (0,0) liegt links oben
+    - x-Werte erstrecken sich nach rechts
+    - y-Werte nach unten
+    - g.drawLine(x1, y1, x2, y2);
+          x1, y1 sind die Koordinaten des Startpunkts der Linie.
+          x2, y2 sind die Koordinaten des Endpunkts der Linie.
+
+Beispiel 2
+- Zu jedem Fenster gibt es einen Graphikkontext
+- getGraphics() liefert diesen Graphikkontext
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;                              // für die Klasse Graphics
+class VL_01_Beispiel2 {
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Mein erstes Fenster");
+        frame.setSize(400,300);
+        frame.setVisible(true);
+        Graphics g = frame.getGraphics();
+        g.drawLine(0,0,200,100);
+    }
+}
+
+Problem:
+- Die Linie wird nicht gezeichnet
+- wurde sie doch gezeichnet, geht sie wieder verloren
+
+Erklärung:
+- ein Graphikkontext merkt sich seinen Inhalt nicht
+- beim Neuzeichnen des Fensters sind die Informationen verloren
+
+Ein genaurerer Blick auf JFrame
+- ein Fenster in Swing besteht aus mehreren Teilen
+- i.A. ist die ContentPane interessant, da man sie sieht
+
+Zeichnen in einem JFrame
+- MenuPane:     enthält das Menu
+- ContentPane:  der freie Fensterbereich zum Zeichnen
+- GlassPane:    unsichtbare Schicht über dem Fenster; kann verwendet werden, um Low-Level Events abzufragen,
+                um z.B. Mouseevents für alle Componente zu bearbeiten
+
+class JFrame ... {
+    public JRootPane getRootPane();
+    public Container getContentPane();
+    public JLayeredPane getLayeredPane();
+    public Component getGlassPane();
+    ...
+}
+
+Allgemeines Vorgehen:
+- eigene Klasse von JComponent ableiten
+- in diese Klasse wird gezeichnet (paintComponent-Methode überlagern, da die paint-Methode selber von Swing verwendet wird)
+- Objekt dieser Klasse zu dem ContentPane mittels der add-Methode hinzufügen
+
+Die paintComponent(Graphics g) Methode
+
+-   Wann muss ein Fenster (oder ein Teil) neu gezeichnet werden?
+        - beim ersten Mal
+        - immer, wenn ein Teil verdeckt war und wieder sichtbar wird
+        - unter Umständen häufiger (man kann nie wissen ...)
+-   die paintComponent(Graphics g) Methode der Fensterelemente wird aufgerufen
+
+import javax.swing.*;
+import java.awt.*;
+class MyComponent extends JComponent{
+    @Override
+    public void paintComponent(Graphics g){
+        g.drawLine(0,0,200,100);
+    }
+}
+class VL_01_Beispiel3 extends JFrame {
+    public static void main(String[] args){
+        JFrame j = new JFrame("Mein erstes Fenster");
+        j.add(new MyComponent());
+        j.setSize(400,300);
+        j.setVisible(true);
+    }
+}
+
+getContentPane(): Früher war alles anders
+- in alten Versionen von Java (< 1.5) musste man unter Swing der ContentPane die Elemente hinzufügen
+- ein Hinzufügen zum Swing Fenster erzeugte ein Laufzeitfehler
+
+class Beispiel62_4{
+    public static void main(String[] args) throws Exception{
+        final JFrame f = new JFrame("Juhu -- mein erstes Swing Fenster");
+        f.setBounds(100,100,400,300);
+        f.getContentPane().add(new MyContent());        // WICHTIG: in alten Java Versionen die ContentPane verwenden
+        f.setVisible(true);
+    }
+}
+
+________________________________________________________________________________________________________________________
+                Vorlesung 2 - Aufbau von Programmen mit Grafikanteil
+- bisher:
+Programme waren recht kurz und übersichtlich
+- zukünftig:
+Programme mit Grafikanteil werden deutlich umfangreicher und komplizierter
+- daher:
+Programme brauchen eine Architektur, die die verschiedenen Anteile des Programms aufteilt,
+strukturiert und koordiniert
+- Lösung:
+Model - View - Controller (MVC) Konzept
+
+Controller kennt View und Model
+View kennt Model, und beobachtet Controller
+Model beobachtet View
+
+Beispiel: ein Programm, dass
+          - ein Fenster öffnet
+          - immer zufällig zwei Koordinaten produziert
+          - im Fenster eine Linie zwischen diesen beiden Koordinaten zieht
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class Model{
+    int m_maxX;                 // *
+    int m_maxY;                 // *
+    int m_X1,m_X2,m_Y1,m_Y2;    // * Die Daten des Modells
+    Model(int maxX,int maxY){
+        this.m_maxX = maxX;
+        this.m_maxY = maxY;
+    }
+    void genNewKoor(){          // Das Modell kann nur neue Daten erzeugen
+        this.m_X1 = (int)(Math.random() * m_maxX);
+        this.m_X2 = (int)(Math.random() * m_maxX);
+        this.m_Y1 = (int)(Math.random() * m_maxY);
+        this.m_Y2 = (int)(Math.random() * m_maxY);
+    }
+}
+class View extends JComponent{
+    private Model m_Mod;        // Die Ansicht kennt das Modell
+    View(Model mod){            // Zum Zeichnen wird auf das Model nur lesend zugegriffen
+        this.m_Mod = mod;
+    }
+    @Override
+    public void paintComponent(Graphics g){
+        g.drawLine(this.m_Mod.m_X1,this.m_Mod.m_Y1,this.m_Mod.m_X2,m_Mod.m_Y2);
+    }
+}
+class Controller{
+    private Model m_Mod;        // *
+    private View m_View;        // * Der Controller kennt nicht nur das Modell und die Ansicht ...
+    Controller(){
+        this.m_Mod = new Model(300,200);    // ... sondern erzeugt sie auch (muss aber nicht sein)
+        this.m_View = new View(this.m_Mod);
+        JFrame j = new JFrame();
+        j.add(m_View);
+        j.setSize(this.m_Mod.m_maxX,this.m_Mod.m_maxY);
+        j.setVisible(true);
+    }
+    void simulate(){
+        while(true){
+            try{Thread.sleep(500);}
+            catch(InterruptedException e){}
+            this.m_Mod.genNewKoor();
+            this.m_View.repaint();      // Der Controller verändert nicht die Daten, bewirkt aber die Veränderungen
+        }
+    }
+}
+public class VL_02_Beispiel4 {
+    public static void main(String[] args) throws Exception{
+        Controller c = new Controller();        // *
+        c.simulate();                           // Das Hauptprogramm erzeugt nur noch den Controller und startet ihn
+    }
+}
+
+- bei kleineren Grafikprogrammen werden Controller und View auch zusammengefasst
+  Controller/View  <-> Model
+
+- gleiches Beispiel
+  - das Model ändert sich nicht
+  - der Controlleranteil geht in die View ein
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class ViewBeispiel5 extends JComponent{
+    Model m_Mod = new Model(300,200);   // View/Controller erzeugt das Model ...
+    public void paintComponent(Graphics g){
+        g.drawLine(this.m_Mod.m_X1,this.m_Mod.m_Y1,this.m_Mod.m_X2,this.m_Mod.m_Y2);
+    }
+    void simulate(){                        // ... und enthält auch den Kontrollanteil
+        while(true){
+            try{Thread.sleep(500);}
+            catch(InterruptedException e){}
+            this.m_Mod.genNewKoor();
+            repaint();
+        }
+    }
+}
+public class VL_02_Beispiel5 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        ViewBeispiel5 v = new ViewBeispiel5();
+        j.add(v);
+        j.setSize(v.m_Mod.m_maxX,v.m_Mod.m_maxY);
+        j.setVisible(true);
+        v.simulate();
+    }
+}
+________________________________________________________________________________________________________________________
+                Text schreiben in Fenstern
+Dazu gibt es u.a. die Methode:
+class Graphics ...
+    ...
+    public void drawString(String str, int x, int y);       // schreibt str an die Position (x, y);
+- Schreibt den String str im Fenster "an der Position (x, y)"
+- verwendet den Standradfont
+- verwendet die Standardfarbe
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class Content extends JComponent{
+    @Override
+    public void paintComponent(Graphics g){
+        String strText = new String("Mein\n Text");
+        g.drawString(strText,50,100);
+        g.drawChars(strText.toCharArray(),1,strText.length()-1,50,120);
+        g.drawBytes(strText.getBytes(),5,strText.length()-5,80,140);
+    }
+}
+public class VL_02_Beispiel6 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new Content());
+        j.setSize(400,300);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+                Fonts
+- Der Standardfont wird gesetzt durch setFont
+    public void setFont(Font font);
+- Der Standardfont kann abgefragt werden durch getFont
+    public Font getFont();
+- Neue Fonts werden mittels des Konstruktors erzeugt
+    Font(String name, int style, int size);
+    - name:     Name des Fonts
+    - style:    Stil des Fonts (Font.PLAIN, Font.BOLD, Font.ITALIC),
+    - size:     gibt die Größe in Punkte an
+    VORSICHT: nicht style und size verwechseln
+
+Welche Namen sind erlaubt?
+    • SansSerif (früher Helvetica)
+    • Serif (früher TimesRoman)
+    • Monospaced (früher Courier)
+
+    • Diese Fonts sollten auf allen JAVA Systemen vorhanden sein.
+    • Darüber hinaus gibt es noch weitere Fonts, die aber nicht auf
+      jedem System verfügbar sind.
+    • Daher kann Ihr Programm u.U. auf einem anderen System die
+      Schriften nicht richtig darstellen, wenn Sie andere Fonts
+      verwenden
+
+Welche Stile sind erlaubt?
+    • Font.PLAIN (Standardfont)
+    • Font.BOLD (Fett)
+    • Font.ITALIC (Kursiv)
+
+    Font.BOLD | Font.ITALIC erzeugt kursiven Fettdruck
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class Content extends JComponent{
+    @Override
+    public void paintComponent(Graphics g){
+        String strText = new String("Mein\n Text");
+        g.drawString(strText,50,100);
+        g.setFont(new Font("Serif",Font.BOLD|Font.ITALIC,20));
+        g.drawChars(strText.toCharArray(),1,strText.length()-1,50,120);
+        g.setFont(new Font("Monospaced",Font.ITALIC,50));
+        g.drawBytes(strText.getBytes(),5,strText.length()-5,80,140);
+    }
+}
+public class VL_02_Beispiel6 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new Content());
+        j.setSize(400,300);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+                Verfügbare Fonts
+Die Klasse GraphicsEnvironment hilft einem, alle verfügbaren Fonts zu ermitteln.
+
+class GraphicsEnvironment
+    ...
+    public static GraphicsEnvironment getLocalGraphicsEnvironment();
+    public String[] getAvailableFontFamilyNames();
+    ...
+
+public void paintComponent(Graphics g){
+    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+    String[] arFonts = ge.getAvailableFontFamilyNames();
+    for(int i = 0; i < arFonts.length; ++i){
+        g.setFont(new Font(arFonts[i],Font.PLAIN,12));
+        g.drawString(arFonts[i],10,getInsets().top + (i+1) * 12);
+    }
+}
+________________________________________________________________________________________________________________________
+                Farben
+Farben werden in JAVA in zwei Modellen dargestellt:
+- RGB Farbmodell: additive Farbmischung von Rot, Grün, Blau
+- HSB Farbmodell: drei Parameter: Farbton, Intensität,
+JAVA unterstützt die Konvertierung zwischen diesen Modellen
+im Folgenden: RGB Farbmodell
+
+Farben in JAVA in Klasse Color repräsentiert
+public Color(int red, int green, int blue);
+
+Erzeugt eine Farbe mit den angegebenen Farbanteilen. red, green
+und blue müssen zwischen 0 und 255 liegen. 0 bedeutet kein
+Anteil, 255 bedeutet maximaler Anteil.
+
+Color(255,255,255)
+Color(255,0,0)
+Color(255,255,0)
+
+public Color(float red,float green,float blue);
+
+Erzeugt eine Farbe mit den angegebenen Farbanteilen. red, green
+und blue müssen zwischen 0.0 und 1.0 liegen. 0.0 bedeutet kein
+Anteil, 1.0 bedeutet maximaler Anteil.
+
+Color(1.0,1.0,1.0) Weiß
+Color(1.0,0.0,0.0) Rot
+Color(1.0,1.0,0.0) Gelb
+
+Vordefinierte Farben:
+
+class Color
+    ...
+    public static Color white;
+    public static Color lightGray;
+    public static Color gray;
+    public static Color darkGray;
+    public static Color black;
+    public static Color red;
+    public static Color blue;
+    public static Color green;
+    public static Color yellow;
+    public static Color magenta;
+    public static Color cyan;
+    public static Color orange;
+    public static Color pink;
+    ...
+
+Informationen über Farben:
+class Color
+    ...
+    public int getRed();
+    public int getGreen();
+    public int getBlue();
+    ...
+liefert den Rot-, Grün- bzw. Blauanteil einer Farbe.
+
+Verwenden von Farben
+class Graphics
+    ...
+    public void setColor(Color c);
+    public Color getColor();
+    ...
+- g.setColor(Color.red) setzt aktuelle Zeichenfarbe auf Rot.
+- g.getColor() liefert aktuelle Zeichenfarbe
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class ContentBeispiel9 extends JComponent{
+    public void paintComponent(Graphics g){
+        for(int i = 0; i < 256; ++i){
+            for(int j = 0; j < 256; ++j){
+                g.setColor(new Color(i,j,0));
+                g.drawLine(i,j,i,j);
+                g.setColor(new Color(i,j,255));
+                g.drawLine(i+256,j,i+256,j);
+            }
+        }
+    }
+}
+public class VL_02_Beispiel9 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new ContentBeispiel9());
+        j.setSize(550,300);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+                Systemfarben
+class SystemColor
+    ...
+    public static Color desktop;
+    public static Color control;
+    ...
+- desktop ist die Hintergrundfarbe des Desktops.
+- control ist die Hintergrundfarbe für Dialogelemente.
+
+Diese Farben werden zur Laufzeit ermittelt.
+
+public void paintComponent(Graphics g){
+    g.setColor(SystemColor.desktop);
+    g.fillRect(0,0,100,100);
+}
+________________________________________________________________________________________________________________________
+                Vorder- und Hintergrundfarbe
+
+Zu jeder Komponente kann die Standardfarbe für den Vorder- und Hintergrund gesetzt werden
+
+class JComponent{
+    ...
+    public void setBackground(Color c);
+    public void setForeground(Color c);
+    ...
+}
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class ContentBeispiel16 extends JComponent{
+    @Override
+    public void paintComponent(Graphics g){
+        g.fillRect(40,40,50,50);
+    }
+}
+public class VL_02_Beispiel16 {
+    public static void main(String[] args){
+        JFrame j = new JFrame("Jetzt mal mit anderen Farben");
+        j.add(new ContentBeispiel16());
+        j.setBounds(200,300,400,200);
+        j.getContentPane().setForeground(Color.cyan);
+        j.getContentPane().setBackground(Color.pink);
+        // Wichtig: nicht das Fenster, sondern der Inhalt muss geändert werden
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+                Vorlesung 3 - Aufruf von Fenstern
+public JFrame();
+dadurch wird ein einfaches Fenster mit Rahmen und leerer Titelleiste erzeugt
+
+public JFrame(String strTitle);
+erzeugt ein einfaches Fenster, mit Rahmen und Titelleiste, sowie den String strTitle
+
+public JWindow(JFrame parent);
+erzeugt ein einfaches Fenster ohne Rahmen und ohne Titleleiste
+
+public static void main(String[] args){
+    JFrame top = new JFrame();
+    JFrame top2 ) new JFrame("juhu");
+    top.setSize(800,600);
+    tio.setVisible(true);
+    top2.setSize(800,600);
+    top2.setVisible(true);
+    JWindow w = new JWindow(top);
+    w.setSize(400,300);
+    w.setVisible(true);
+}
+...
+JFrame top = new JFrame();
+JWindow w = new JWindow(top);
+...
+Frage: Warum braucht ein einfaches Fenster(JWindow) einen Vater-JFrame?
+Weil es ein eigenes, unabhängiges Fenster darstellen soll, das jedoch
+keinen eigenen Rahmen, keine Menüleiste und keine Titelleiste hat.
+
+Erzeugen eines Fensters, z.B.:
+    JFrame f = new JFrame();
+sichtbar machen, d.h. auf dem Bildschirm anzeigen:
+    f.setVisible(true);
+________________________________________________________________________________________________________________________
+            Schließen von Fenstern
+Fenster werden durch den Befehl
+    setVisible(false)
+geschlossem, d.h. unsichtbar gemacht.
+WICHTIG: Das Fenster existiert noch im Speicher und kann jederzeit wieder angezeigt werden.
+
+package vl_java;
+import javax.swing.*;
+
+public class VL_03_Beispiel12 {
+    public static void main(String[] args) {
+        JFrame f = new JFrame();
+        f.setSize(700,500);
+        f.setVisible(true);
+        try {
+            Thread.sleep(700);
+        } catch (java.lang.InterruptedException i) {}
+        f.setVisible(false);
+        try {
+            Thread.sleep(700);
+        } catch (java.lang.InterruptedException i) {}
+        f.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Löschen von Fenstern
+Fenster werden durch den Befehl
+    dispose();
+gelöscht, d.h. unsichtbar gemacht und aus dem Speicher gelöscht.
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+public class VL_03_Beispiel13 extends JComponent {
+    private int m_iCurrentNum = 0;
+    public void countDown(JFrame f) {
+        for(m_iCurrentNum = 10;m_iCurrentNum > 0;--m_iCurrentNum) {
+            try {Thread.sleep(1000);}
+            catch (InterruptedException e) {}
+            f.repaint();
+        }
+        f.dispose();
+    }
+    public static void main(String[] args) {
+        JFrame f = new JFrame();
+        VL_03_Beispiel13 b = new VL_03_Beispiel13();
+        f.add(b);
+        f.setSize(400,300);
+        f.setVisible(true);
+        b.countDown(f);
+        System.out.println("Schluss");
+    }
+    public void paintComponent(Graphics g){
+        g.setFont(new Font("Serif",Font.BOLD + Font.ITALIC,80));
+        FontMetrics actualMetric = g.getFontMetrics();
+        String strText = Integer.toString(m_iCurrentNum);
+        final int fiTextWidth = actualMetric.stringWidth(strText);
+        final int fiTextHeight = actualMetric.getHeight();
+        final int fiTextBottom = actualMetric.getDescent() + actualMetric.getLeading();
+        final int fiVisibleWidth = getSize().width-getInsets().left-getInsets().right;
+        final int fiVisibleHeight = getSize().height-getInsets().top-getInsets().bottom;
+        g.clearRect(0,0,getBounds().width,getBounds().height);
+        g.drawString(strText,
+                getInsets().left + (fiVisibleWidth - fiTextWidth) / 2,
+                getInsets().top + (fiVisibleHeight + fiTextHeight) / 2 - fiTextBottom);
+        System.out.println(m_iCurrentNum);
+    }
+}
+________________________________________________________________________________________________________________________
+            Bildschirm- und Fenstergröße und -position
+class Toolkit
+    ...
+    public Dimension getScreenSize();       // Bildschirmgröße
+    ...
+
+class JComponent
+    ...
+    public void setSize(int width, int height);     // Fenstergröße
+    public void setSize(Dimension d);
+
+    public void setLocation(int x, int y);          // Fensterposition
+    public void setLocation(Point p);
+
+    public void setBounds(int x, int y, int width, int height);     // Fenstergröße und -position
+    public void setBounds(Rectangle r);
+    ...
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+class Content_VL_03_Beispiel14 extends JComponent{
+    @Override
+    public void paintComponent(Graphics g){
+        g.setColor(Color.red);
+        g.setColor(Color.white);
+        g.fill3DRect(0,0,300,200,true);
+    }
+}
+public class VL_03_Beispiel14 {
+    public static void main(String[] args){
+        JWindow w = new JWindow(new JFrame());
+        w.add(new Content_VL_03_Beispiel14());
+        Dimension dim = w.getToolkit().getScreenSize();
+        w.setLocation(dim.width/2-150,dim.height/2-100);
+        w.setSize(300,200);
+        w.setBounds(dim.width/2-150,dim.height/2-100,300,200);
+        w.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Anzeigezustand von Fenstern
+- Fenster können "normal" oder "als Symbol" anzeigt werden
+- Setzen des Anzeigezustands
+    public synchronized void setExtendedState(int state);
+- mögliche Zustände
+    - Frame.ICONIFIED
+    - Frame.NORMAL
+________________________________________________________________________________________________________________________
+            Die Titleleiste
+- Der Inhalt der Titelleiste kann im Konstruktor von Frame gesetzt werden.
+    - public JFrame(String strTitle);
+- Während des Programms kann der Title umgesetzt werden,
+    - public void setTitle(String strTitle);
+- und abgefragr werden.
+    - public String getTitle();
+________________________________________________________________________________________________________________________
+            Das Icon-Image
+- Werden Fenster "als Symbol" dargestellt, repräsentiert ein Icon das Fenster.
+- Das Icon wird gesetzt durch:
+    - public void setIconImage(Image image);
+________________________________________________________________________________________________________________________
+            Images
+- Images können über das Toolkit geladen werden
+    class Toolkit
+        ...
+        public abstract Image getImage(String strFileName);
+        public abstract Image getImage(URL url);
+- Images werden im Graphikontext gedruckt durch:
+    class Graphics
+        ...
+        public void drawImage(Image image,...)
+        ...
+________________________________________________________________________________________________________________________
+            Der Mauscursor
+- Die Form des Mauscursors kann für jede Component eigenständig definiert werden.
+    class JComponent
+        ...
+        public void setCursor(Cursor cursor);
+        ...
+- Die Klasse für die unterschiedlichen Mauscursor.
+    class Cursor
+        ...
+        public Cursor(int type);
+        public static Cursor getPredefinedCursor(int type);
+        final public int CROSSHAIR_CURSOR;
+        final public int DEFAULT_CURSOR;
+        final public int E_RESIZE_CURSOR;
+        ...
+WICHTIG: nicht neue Instanzen von Cursor erzeugen, sondern mittels getPredifinedCursor(int type)
+einen anderen Cursor wählen.
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+public class VL_03_Beispiel15 {
+    public static void main(String[] args){
+        JFrame f = new JFrame();
+        f.setTitle("Es geht auch anders");
+        Dimension dim = f.getToolkit().getScreenSize();
+        f.setBounds(300,200,dim.width/2-150,dim.height/2-100);
+        Image img = f.getToolkit().getImage("start.gif");
+        f.setIconImage(img);
+        f.setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
+        f.setVisible(true);
+        f.setExtendedState(Frame.ICONIFIED);
+    }
+}
+________________________________________________________________________________________________________________________
+            Vorlesung 4 - Event-Handling
+Situation: Ein Button eines Dialogs wird gedrückt.
+Frage:     Was passiert in dieser Situation?
+
+1.  An den Button wird eine Nachricht geschickt, dass er gedrückt wird.
+2.  Der Button schaut nach, ob er auf das Drücken reagieren soll.
+3.  Wenn er reagieren soll, wird die Nachricht an den "Sachbearbeiter" weitergeschickt.
+
+Ereignis: Benutzer drückt Button
+Window Manager -> (Nachricht "Du wurdest gedrückt") -> Objekt der Klasse JButton -> (schaut nach, ob auf diese Nachticht reagiert werden soll)
+-> Ja -> Objekt der Klasse "Objekt der Klasse "Reagierer" verarbeitet Event
+-> Nein -> "Es passiert nichts"
+
+Beim Event-Handling sind genau die folgenden Objekte beteiligt:
+1. das Objekt, dass das Event auslöst, die Ereignisquelle (Event Source), - siehe Objekt der Klasse JButton
+2. das Objekt, dass das Event verarbeitet, der Ereignisempfänger (Event Listener), - siehe Objekt der Klasse "Reagierer" verarbeitet Event
+
+1. Frage: Wie kann der Button wissen, auf welche Ereignisse er reagieren soll?
+2. Frage: Woher weiß der Button, welches Objekt das Ereignis verarbeitet?
+
+Antwort: Das Objekt zum Verarbeiten des Events wird bei dem Button zu genau diesem Event registriert.
+________________________________________________________________________________________________________________________
+            Vorlesung 4 - Beispiel 22
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+class Reagierer implements ActionListener{
+    int j = 0;
+    public void actionPerformed(ActionEvent e){
+        System.out.println(++j + " juhu");
+    }
+}
+class MyButton extends JButton{
+    public MyButton(){
+        super("Drück mich!");
+        addActionListener(new Reagierer());
+    }
+}
+public class VL_04_Beispiel22 {
+    public static void main(String[] args){
+        JFrame f = new JFrame();
+        f.setBounds(100,100,300,200);
+        f.add(new MyButton());
+        f.setVisible(true);
+    }
+}
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel22_3 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new JButton("Drück mich"){
+            {   addActionListener(new ActionListener(){
+                    public void actionPerformed(ActionEvent e){
+                        System.out.println("juhu");
+                    }
+                });
+            }
+        });
+        j.setBounds(100,100,300,200);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen
+
+Welche Ereignisse (Events) gibt es, auf die man reagieren kann?
+Event Object
+    AWT Object
+
+AWT Object
+    Component Event, Action Event, Adjustment Event, Item Event, Text Event
+
+Component Event
+    Focus Event, Input Event, Container Event, Window Event
+
+Input Event
+    Key Event, Mouse Event
+
+
+
+            Action Ereignisse:
+Listener-Interface              ActionListener
+Registrierungsmethode           void addActionListener(ActionListener l);
+Mögliche Ereignisquellen        JButton, JList, JMenuItem, ITextField
+Ereignismethode                 public void actionPerformed(ActionEvent e);
+Bedeutung                       eine Aktion wurde ausgelöst, z.B. der Button wurde gedrückt,
+                                ein Menu wurde ausgewählt, ein Text wurde in dem Textfeld eingegeben.
+
+            Window Ereignisse
+Listener-Interface              WindowListener
+Registrierungsmethode           void addWindowListener(WindowListener l);
+Mögliche Ereignisquellen        JDialog, JFrame
+Ereignismethode                 void windowActivated(WindowEvent e);
+                                void windowClosed(WindowEvent e);
+                                void windowClosing(WindowEvent e);
+                                void windowDeactivated(WindowEvent e);
+                                void windowDeiconified(WindowEvent e);
+                                void windowIconified(WindowEvent e);
+                                void windowOpened(WindowEvent e);
+________________________________________________________________________________________________________________________
+            Window Ereignisse: Beispiel
+JFrame j = new JFrame();
+j.setBounds(100,100,300,200);
+j.addWindowListener(new WindowListener(){
+    public void windowActivated(WindowEvent e){}
+    public void windowClosed(WindowEvent e){}
+    public void windowClosing(WindowEvent e){
+        System.exit(0);
+    }
+    public void windowDeactivated(WindowEvent e){}
+    public void windowDeiconified(WindowEvent e){}
+    public void windowIconified(WindowEvent e){}
+    public void windowOpened(WindowEvent e){}
+});
+j.setVisible(true);     // Was ist das Problem?
+________________________________________________________________________________________________________________________
+            Adapterklassen
+Problem mit großen Listener Interfaces:
+Es müssen immer alle Methoden implementiert werden, obwohl die meisten leer sind.
+Lösung:
+Es gibt entsprechende Adapterklassen zu allen Listener Interfaces, die alle Methoden mit leeren
+Methodenrümpfen implementiert. Verwenden Sie die entsprechenden Adapterklasse
+und überschreiben Sie nur die Methode, die Sie brauchen.
+
+kanonische Namen: WindowListener <-> WindowAdapter
+
+public Interface WindowListener{
+    public void windowActivated(WindowEvent e);
+    public void windowClosed(WindowEvent e);
+    public void windowClosing(WindowEvent e);
+    public void windowDeactivated(WindowEvent e);
+    public void windowDeiconified(WindowEvent e);
+    public void windowIconified(WindowEvent e);
+    public void windowOpened(WindowEvent e);
+}
+
+public class WindowAdapter implements WindowListener{
+    public void windowActivated(WindowEvent e) {}
+    public void windowClosed(WindowEvent e) {}
+    public void windowClosing(WindowEvent e) {}
+    public void windowDeactivated(WindowEvent e) {}
+    public void windowDeiconified(WindowEvent e) {}
+    public void windowIconified(WindowEvent e) {}
+    public void windowOpened(WindowEvent e) {}
+}
+________________________________________________________________________________________________________________________
+            Beispiel 23
+Window Ereignsisse: Beispiel mit Adapterklasse
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_04_Beispiel23_1 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100,100,300,200);
+        j.addWindowListener(new WindowAdapter(){
+            public void windowClosing(WindowEvent e){
+                j.dispose();
+            }
+            public void windowIconified(WindowEvent e){
+                j.setExtendedState(JFrame.NORMAL);
+            }
+        });
+        j.setVisible(true);     // Deutlich übersichtlicher!
+    }
+}
+________________________________________________________________________________________________________________________
+            Gefahr bei Adapterklassen
+public static void main(String[] args){
+    JFrame j = new JFrame();
+    j.setBounds(100,100,300,200);
+    j.addWindowListener(new WindowAdapter(){
+        public void windowclosing(WindowEvent e){
+            j.dispose();
+        }
+    });
+    j.setVisible(true);
+}
+
+Problem:
+- in WindowAdapter ist windowClosing bereits implementiert
+- wir definieren windowclosing: eine neue Methode, die nichts mit windowClosing zu tun hat
+- BS ruft windowClosing, nicht unsere windowclosing auf
+
+Lösung:
+- Compiler mittels Pragmas sagen, dass eine Methode überlagert werden soll
+- dann kann der Compiler Rechtsschreibfehler entdecken
+
+class Beispiel23_3{
+    public static void main(String[] args){
+        JFrame j = new JFram();
+        j.setBounds(100,100,300,200);
+        j.addWindowListener(new WindowAdapter(){
+            @Override // Sagt, dass nachfolgende Methode eine vorhandene Methode überlagern soll
+            public void windowclosing(WindowEvent e){
+                j.dispose();
+            }
+        });
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+Mouse Ereignisse
+Listener-Interface              MouseListener
+Registrierungsmethode           void addMouseListener(MouseListener l);
+Mögliche Ereignisquelle         JComponent
+Ereignismethode                 void mouseClicked(MouseEvent e);
+                                void mouseEntered(MouseEvent e);
+                                void mouseExited(MouseEvent e);
+                                void mousePrssed(MouseEvent e);
+                                void mouseReleased(MouseEvent e);
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_04_Beispiel24 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100,100,300,200);
+        j.setVisible(true);
+        j.addMouseListener(new MouseAdapter(){
+            @Override
+            public void mouseEntered(MouseEvent e){
+                System.out.println("drin");
+            }
+            @Override
+            public void mouseClicked(MouseEvent e){
+                System.out.print("mouse click");
+                System.out.print(" shift: " + (e.isShiftDown() ? "yes" : "no"));
+                System.out.print(" control: " + (e.isControlDown() ? "yes" : "no "));
+                System.out.print(" meta: " + (e.isAltDown() ? "yes" : "no "));
+                System.out.print(" Button: " + (e.getButton() == MouseEvent.BUTTON1
+                                            ? "links"
+                                            : e.getButton() == MouseEvent.BUTTON2
+                                            ? "mitte" : "rechts"));
+            }
+        });
+    }
+}
+________________________________________________________________________________________________________________________
+            Vorlesung 5
+MouseMotion Ereignisse
+
+Listener-Interface          -       MouseMotionListener
+Registrierungsmethode       -       void addMouseMotionListener(MouseMotionListener l);
+Mögliche Ereignisquellen    -       JComponent
+Ereignismethode             -       void mouseDragged(MouseEvent e);
+                                    void mouseMoved(MouseEvent e);
+Bedeutung                   -       Die Maus wurde bei gedrückter Maustaste bewegt (mouseDragged) bzw.
+                                    bei nicht gedrückter Maustastte (mouseMoved)
+Beispiel 24_1
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_04_Beispiel24_1 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        j.addMouseMotionListener(new MouseMotionAdapter(){
+            @Override
+            public void mouseMoved(MouseEvent e){
+                System.out.println(e.getPoint());
+            }
+        });
+        j.setVisible(true);
+    }
+}
+
+Beispiel 24_2
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel24_2 extends JComponent{
+    Point mPoint;
+    Image mImg;
+    public VL_04_Beispiel24_2(){
+        mImg = getToolkit().getImage("src/vl_java/ZZ5H.gif");
+        addMouseMotionListener(new MouseMotionAdapter(){
+            @Override
+            public void mouseDragged(MouseEvent e){
+                mPoint = e.getPoint();
+                repaint();
+            }
+        });
+    }
+    public void paintComponent(Graphics g){
+        if(mImg != null && mPoint != null)
+            g.drawImage(mImg, mPoint.x, mPoint.y, this);
+    }
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new VL_04_Beispiel24_2());
+        j.setBounds(100, 100, 700, 500);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+MouseWheel Ereignisse (ab JDK 1.4)
+
+Listener Interface              -           MouseWheelListener
+Registrierungsmethode           -           void addMouseWheelListener(MouseWheelListener l);
+Mögliche Ereignisquellen        -           JComponent
+Ereignismethode                 -           void mouseWheelMoved(MouseWheelEvent e);
+Bedeutung                       -           Das Mausrad wurde bewegt.
+
+Beispiel 24_3
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel24_3 extends JComponent{
+    int mY = 100;
+    Image mImg;
+    public VL_04_Beispiel24_3(){
+        mImg = getToolkit().getImage("src/vl_java/ZZ5H.gif");
+        addMouseWheelListener(new MouseWheelListener(){
+            public void mouseWheelMoved(MouseWheelEvent e){
+                mY += e.getWheelRotation();         // Liefert die Richtung zurück (immer 1 oder -1)
+                mY += e.getUnitsToScroll();         // Liefert die Richtung und die Einheiten zurück (z.B. 3 oder -9)
+                repaint();
+            }
+        });
+    }
+    public void paintComponent(Graphics g){
+        if(mImg != null){
+            int imageWidth = mImg.getWidth(this) / 2;
+            g.drawImage(mImg, imageWidth, mY, this);
+        }
+    }
+    public static void main(String[] args){
+        JFrame f = new JFrame();
+        f.add(new VL_04_Beispiel24_3());
+        f.setBounds(100, 100, 700, 500);
+        f.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+Key Ereignisse
+
+ListenerInterface           -           KeyListener
+Registrierungsmethode       -           void addKeyListener(KeyListener l);
+Mögliche Ereignisquellen    -           JComponent
+Ereignismethode             -           void keyPressed(KeyEvent e);
+                                        void keyReleased(KeyEvent e);
+                                        void keyTyped(KeyEvent e);
+Bedeutung                   -           Eine Taste wurde gedrückt (keyPressed), oder losgelassen (keyReleased) oder
+                                        gedrückt und losgelassen (keyTyped)
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel25 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.addKeyListener(new KeyAdapter(){
+            // Unterschied: Shift und Control Taste
+            @Override
+            public void keyTyped(KeyEvent e){
+                System.out.println(e.getKeyChar());
+            }
+        });
+        j.setBounds(100, 100, 300, 200);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+Item Ereignisse
+
+Listener Interface          -           ItemListener
+Registrierungsmethode       -           void addItemListener(ItemListener l);
+Mögliche Ereignisquellen    -           JCheckBox, JComboBox, JList, JCheckboxMenuItem
+Ereignismethode             -           void itemStateChanged(ItemEvent e);
+Bedeutung                   -           Der Zustand hat sich verändert
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel29 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new JCheckBox("vielleicht"){
+            {
+                addItemListener(new ItemListener(){
+                    public void itemStateChanged(ItemEvent e){
+                        System.out.println(e.getStateChange() == ItemEvent.SELECTED);
+                        System.out.println(e.getStateChange());
+                        System.out.println(isSelected());
+                    }
+                });
+            }
+        });
+        j.setBounds(100, 100, 300, 200);
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+Adjustment Ereignisse
+
+ListenerInterface           -           AdjustmentListener
+Registrierungsmethode       -           void addAdjustmentListener(AdjustmentListener l);
+Mögliche Ereignisquellen    -           JScrollBar
+Ereignismethode             -           void adjustmentValueChanged(AdjustmentEvent e);
+Bedeutung                   -           Der Wert wurde geändert
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel26 extends JFrame{
+    MyScrollbar m_Red = new MyScrollbar();
+    MyScrollbar m_Green = new MyScrollbar();
+    MyScrollbar m_Blue = new MyScrollbar();
+    class MyScrollbar extends JScrollBar {
+        int m_iValue;
+        MyScrollbar() {
+            super(VERTICAL,0,1,0,256);
+            addAdjustmentListener(new AdjustmentListener() {
+                public void adjustmentValueChanged(AdjustmentEvent e) {
+                    m_iValue = e.getValue();
+                    setColor();
+                }
+            });
+        }
+    }
+    public VL_04_Beispiel26() {
+        setBounds(100,100,300,200);setLayout(new FlowLayout());
+        add(m_Red);add(m_Green);add(m_Blue);
+        setColor();setVisible(true);
+    }
+    public void setColor() {
+        getContentPane().setBackground(new Color(m_Red.m_iValue,m_Green.m_iValue,m_Blue.m_iValue));
+    }
+    public static void main(String [] args) {
+        new VL_04_Beispiel26();
+    }
+}
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel26_1 extends JFrame implements AdjustmentListener {
+    JScrollBar red = new JScrollBar(JScrollBar.VERTICAL, 0, 1, 0, 256);
+    JScrollBar green = new JScrollBar(JScrollBar.VERTICAL, 0, 1, 0, 256);
+    JScrollBar blue = new JScrollBar(JScrollBar.VERTICAL, 0, 1, 0, 256);
+    public VL_04_Beispiel26_1(){
+        setBounds(100,100, 300, 200);
+        setLayout(new FlowLayout());
+        add(red);
+        add(green);
+        add(blue);
+        setVisible(true);
+        red.addAdjustmentListener(this);
+        green.addAdjustmentListener(this);
+        blue.addAdjustmentListener(this);
+    }
+    public void adjustmentValueChanged(AdjustmentEvent e){
+        getContentPane().setBackground(new Color(red.getValue(), green.getValue(), blue.getValue()));
+    }
+    public static void main(String[] args){
+        new VL_04_Beispiel26_1();
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+Focus Ereignisse
+
+ListenerInterface           -           FocusListener
+Registrierungsmethode       -           void addFocusListener(FocusListener l);
+Mögliche Ereignisquellen    -           JComponent
+Ereignismethode             -           void focusGained(FocusEvent e);
+                                        void focusLost(FocusEvent e);
+Bedeutung                   -           Eine Komponente erhält den Focus (focusGained)
+                                        bzw. verliert ihn (focusLost).
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+
+Component Ereignisse
+
+ListenerInterface           -           ComponentListener
+Registrierungsmethode       -           void addComponentListener(ComponentListener l);
+Mögliche Ereignisquellen    -           JComponent
+Ereignismethode             -           void componentHidden(ComponentEvent e);
+                                        void componentMoved(ComponentEvent e);
+                                        void componentResized(ComponentEvent e);
+                                        void componentShown(ComponentEvent e);
+Bedeutung                   -           Eine Komponente wird verdeckt (setVisible(false)), bewegt,
+                                        in der Größe verändert oder sichtbar (setVisible(true)) gemacht.
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_04_Beispiel27 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.addComponentListener(new ComponentAdapter(){
+            @Override
+            public void componentResized(ComponentEvent e){
+                System.out.println("Resize: " + e);
+            }
+        });
+        j.setBounds(100, 100, 300, 200);
+        j.setVisible(true);
+    }
+}
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_04_Beispiel27_1 {
+    public static void main(String[] args){
+        JFrame f = new JFrame();
+        f.setBounds(200, 200, 200, 200);
+        f.setVisible(true);
+
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300,200);
+        j.addComponentListener(new ComponentAdapter(){
+            @Override
+            public void componentResized(ComponentEvent e){
+                java.awt.Dimension dim = j.getSize();
+                f.setSize(dim.width, dim.width);
+            }
+        });
+        j.setVisible(true);
+    }
+}
+________________________________________________________________________________________________________________________
+            Event-Typen (Fort.)
+Container Ereignisse
+
+ListenerInterface           -           ContainerListener
+Registrierungsmethode       -           void addContainerListener(ContainerListener l);
+Mögliche Ereignisquellen    -           JContainer
+Ereignismethode             -           void componentAdded(ContainerEvent e);
+________________________________________________________________________________________________________________________
+            Lambda Ausdrücke
+Problem mit anonymen Klassen zur Implementierung der ActionListener:
+
+    - immer wieder sehr viel Schreibarbeit
+    - die komplette Deklaration der anonymen Klasse könnte der Compiler selber schreiben
+    - daher ab Java 1.8: Lambda Ausdrücke (Begriff aus der funktionalen Programmierung)
+    - nur noch der Inhalt der Funktion muss implementiert werden
+    - nicht mehr implementiert werden muss:
+        - Deklaration der anonymen Klasse
+        - Deklaration der überlagerten Methode
+
+- Bisher:
+    ...
+    addActionListener(
+        new ActionListener(){   // *
+            public void actionPerformed(ActionEvent e){ // *
+                System.out.println("juhu");
+            }   // *
+        }   // * Alles überflüssig, da nichts anderes geschrieben werden kann (Ausnahme: 'e' für den Namen des Arguments)
+    );
+
+- mit Lambda Ausdrücken
+    ...
+    addActionListener(
+        e ->
+            System.out.println("juhu")  // WICHTIG: kein Semikolon hier !!!
+    );
+
+- Lambda Ausdrücke funktionieren nur bei Interfaces, die genau eine Methode enthalten
+- sie funktionieren nicht bei
+    - Interfaces mit mehreren Methoden
+    - abstrakten Klassen
+    - normalen Klassen
+- solche Interfaces heißen "funktionale Interfaces" (sie spezifizieren im Wesentlichen eine Funktion)
+
+package vl_java;
+interface Juhu{
+    public void doit();
+}
+public class VL_04_Beispiel29Lambda1 {
+    public static void main(String[] args){
+        Juhu j1 = new Juhu(){
+            public void doit(){
+                System.out.println("dies ist der alte Weg");
+            }
+        };
+        Juhu j2 = () -> System.out.println("mit Lambda Ausdruck");  // ohne Parameter müssen leere Klammern gesetzt werden
+
+        j1.doit();
+        j2.doit();
+    }
+}
+
+- die Methoden können auch mehrere Parameter haben
+
+package vl_java;
+interface Juhu2{
+    public void doit(int i, float f);
+}
+public class VL_04_Beispiel29Lambda2 {
+    public static void main(String[] args){
+        Juhu2 j1 = new Juhu2(){
+          public void doit(int i, float f){
+              System.out.println("old school: i = " + i + " f = " + f);
+          }
+        };
+
+        Juhu2 j2 = (i, f) -> System.out.println("Lambda: i = " + i + " f = " + f); // Mehrere Parameter müssen auch in Klammern gesetzt werden
+
+        j1.doit(12, 34.6f);
+        j2.doit(5, 7.8f);
+    }
+}
+
+- mehrere Statements müssen in einem Block zusammengefasst werden
+
+package vl_java;
+interface Juhu3{
+    public void doit(int i, int f);
+}
+public class VL_04_Beispiel29Lambda3 {
+    public static void main(String[] args){
+        Juhu3 j = (i1, i2) ->{  // * Block von hier
+            System.out.println("jetzt kommt " + i1 + " mal die" + i2);
+            for(int i = 0; i < i1; ++i)
+                System.out.println(i2);
+        };  // * bis hier
+        j.doit(10, 13);
+    }
+}
+
+- die Methoden können auch einen Rückgabewert haben
+
+package vl_java;
+interface Juhu4{
+    public int doit(int i, int j);
+}
+public class VL_04_Beispiel29Lambda4 {
+    public static void main(String[] args){
+        Juhu4 j1 = (i1, i2) -> {return i1*i2;}; // obwohl nur ein Statement (return) muss es dennoch im Block stehen
+        Juhu4 j2 = (x, y) -> x / y; // Spezialfall "Lambda Ausdrücke": das return kann weggelassen werden, dann auch ohne Block
+
+        int a = j1.doit(12, 10);
+        int b = j2.doit(12, 5);
+        System.out.println(a + " " + b);
+    }
+}
+________________________________________________________________________________________________________________________
+    Vorlesung 5
+MouseMotion Ereignisse ->
+    Maus wurde bei gedrückter Maustaste bewegt (mouseDragged)
+    bzw. bei nicht gedrükter Maustaste (mouseMoved)
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_05_Beispiel24_1 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        j.addMouseMotionListener(new MouseMotionAdapter(){
+            @Override
+            public void mouseMoved(MouseEvent e){
+                System.out.println(e.getPoint());
+            }
+        });
+        j.setVisible(true);
+    }
+}
+
+package vl_java;
+import java.awt.*;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_05_Beispiel24_2 extends JComponent{
+    Point mPoint;
+    Image mImg;
+    public VL_05_Beispiel24_2(){
+        mImg = getToolkit().getImage("src/vl_java/ZZ5H.gif");
+        addMouseMotionListener(new MouseMotionAdapter(){
+            @Override
+            public void mouseDragged(MouseEvent e){
+                mPoint = e.getPoint();
+                repaint();
+            }
+        });
+    }
+    public void paintComponent(Graphics g){
+        if(mImg != null && mPoint != null)
+            g.drawImage(mImg, mPoint.x, mPoint.y, this);
+    }
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new VL_05_Beispiel24_2());
+        j.setBounds(100, 100, 700, 500);
+        j.setVisible(true);
+    }
+}
+
+
+MouseWheel Ereignisse -> Das Mausrad wurde bewegt.
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_05_Beispiel24_3 extends JComponent{
+    int mY = 100;
+    Image mImg;
+    public VL_05_Beispiel24_3(){
+        mImg = getToolkit().getImage("src/vl_java/ZZ5H.gif");
+        addMouseWheelListener(new MouseWheelListener(){
+            public void mouseWheelMoved(MouseWheelEvent e){
+                mY += e.getWheelRotation();
+                mY += e.getUnitsToScroll();
+                repaint();
+            }
+        });
+    }
+    @Override
+    public void paintComponent(Graphics g){
+        if(mImg != null)
+            g.drawImage(mImg, getWidth() / 2, mY, this);
+    }
+    public static void main(String[] args){
+        JFrame f = new JFrame();
+        f.add(new VL_05_Beispiel24_3());
+        f.setBounds(100, 100, 700, 500);
+        f.setVisible(true);
+    }
+}
+
+Key Ereignisse -> Eine Taste wurde gedrückt (keyPressed),
+oder losgelassen (keyReleased) oder gedrückt und losgelassen (keyTyped).
+
+package vl_java;
+import java.awt.event.*;
+import javax.swing.*;
+public class VL_05_Beispiel25 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.addKeyListener(new KeyAdapter(){
+            // Unterschied: Shift und Control Taste
+            @Override
+            public void keyTyped(KeyEvent e){
+                System.out.println(e.getKeyChar());
+            }
+        });
+        j.setBounds(100, 100, 300, 200);
+        j.setVisible(true);
+    }
+}
+
+Item Ereignisse -> Der Zustand hat sich geändert.
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_05_Beispiel29 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.add(new JCheckBox("vielleicht"){
+            {
+                addItemListener(new ItemListener(){
+                   public void itemStateChanged(ItemEvent e){
+                       System.out.println(e.getStateChange() == ItemEvent.SELECTED);
+                       System.out.println(e.getStateChange());
+                       System.out.println(isSelected());
+                   }
+                });
+            }
+        });
+        j.setBounds(100, 100, 300, 200);
+        j.setVisible(true);
+    }
+}
+
+Adjustment Ereignisse -> Der Wert wurde geändert
+________________________________________________________________________________________________________________________
+    Vorlesung 6 - Menus
+Menus bestehen aus:
+- Menuzeile
+- Menu
+- Menueinträge
+- Trenner
+- Beschleunigungstaste (Shortkey)
+
+Sinn und Zweck
+- Interaktion mit dem Benutzer
+- Benutzer kann: 1. Aktion auswählen & anstoßen, einfache Daten in dem Programm setzen
+
+Menus bestehen aus (Fort.)
+- Hilfemenu
+- Unternemu
+- Menueintrag als Checkbox
+
+Sonstiges:
+- Programm hat maximal eine Menuleiste
+- Menuleiste kann viele Menus haben (und ein Hilfemenu)
+- Menu kann viele Menueinträge haben
+- Menueintrag kann selber ein Menu sein
+- Menueintrag kann einen Shortkey haben
+- Checkbox kann ein Menueintrag sein
+
+Menuleiste
+- Erzeugt durch Klasse JMenuBar
+- Wird durch setJMenubar-Methode von Frame dem Fenster hinzugefügt
+- getInsets-Methode berücksichtigt dieses neue Element
+- Menuleiste ohne Menus wird nicht dargestellt
+
+package vl_java;
+import javax.swing.*;
+public class VL_06_Beispiel30_1 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+    }
+}
+
+Menu
+- Erzeugt durch Klasse JMenu
+- Menu wird Menuleiste durch add-Methode hinzugefügt
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+public class VL_05_Beispiel30_2 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add(new JMenu("Datei"));
+        j.setJMenuBar(menuBar);
+        j.getContentPane().setBackground(java.awt.Color.PINK);
+        j.setVisible(true);
+    }
+}
+
+Menueinträge
+- Erzeugt durch Klasse JMenuItem
+- Menueintrag wird Menu durch add-Methode hinzugefügt
+- Menueintrag kann auch direkt durch void add(String)-Methode von Menu erzeugt werden
+
+package vl_java;
+import javax.swing.*;
+public class VL_05_Beispiel30_4 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        menu.add(new JMenuItem("Neu"));
+        menu.add("Beenden");
+        menuBar.add(menu);
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+    }
+}
+
+Menueinträge (Fort.)
+- Menueintrag kann selber ein Menu sein (Submenu)
+- Submenu wird Menu durch add-Methode hinzugefügt
+
+package vl_java;
+import javax.swing.*;
+public class VL_05_Beispiel30_5 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        JMenu sub = new JMenu("Speichern");
+        menu.add(new JMenuItem("Neu"));
+        menu.add(sub);
+        sub.add(new JMenuItem("..als HTML"));
+        sub.add(new JMenuItem("..als Source"));
+        menuBar.add(menu);
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+    }
+}
+
+- Menueintrag kann auch Checkbox sein
+- Checkbox stellt booleschen Zustand dar (true/false)
+
+package vl_java;
+import javax.swing.*;
+public class VL_05_Beispiel30_6 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        JMenu sub = new JMenu("Speichern");
+        menu.add(new JMenuItem("Neu"));
+        menu.add(sub);
+        menu.add(new JCheckBoxMenuItem("zentriert"));
+        sub.add(new JMenuItem("..als HTML"));
+        sub.add(new JMenuItem("..als Source"));
+        menuBar.add(menu);
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+    }
+}
+
+- Menueinträge aktivieren/deaktivieren durch void setEnabled(boolean b)-Methode, von MenuItem-Klasse
+- Grundsätzlich sind Menueinträge aktiviert
+
+package vl_java;
+import javax.swing.*;
+public class VL_06_Beispiel30_6 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        JMenu sub = new JMenu("Speichern");
+        menu.add(new JMenuItem("Neu"));
+        menu.add(sub);
+        menu.add(new JCheckBoxMenuItem("zentriert"));
+        sub.add(new JMenuItem("..als HTML"));
+        sub.add(new JMenuItem("..als Source"));
+        menuBar.add(menu);
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+        sub.setEnabled(false);
+    }
+}
+
+Separatoren
+- Menueinträge durch horizontale Linien trennen (Separatoren)
+- Durch addSeparator() Befehl der Menu-Klasse
+
+package vl_java;
+import javax.swing.*;
+public class VL_06_Beispiel30_6 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        JMenu sub = new JMenu("Speichern");
+        menu.add(new JMenuItem("Neu"));
+        menu.add(sub);
+        menu.addSeparator();
+        menu.add(new JCheckBoxMenuItem("zentriert"));
+        sub.add(new JMenuItem("..als HTML"));
+        sub.add(new JMenuItem("..als Source"));
+        menuBar.add(menu);
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+        sub.setEnabled(false);
+    }
+}
+
+Shortcuts
+- Auswahl von Menueintrag durch Shortcuts
+- Durch Klasse KeyStroke implementiert
+- Durch Methode setAccelerator dem Menu hinzugefügt
+
+package vl_java;
+import javax.swing.*;
+import java.awt.event.*;
+public class VL_06_Beispiel30_6 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        JMenu sub = new JMenu("Speichern");
+        menu.add(new JMenuItem("Neu"));
+        menu.add(sub);
+        JMenuItem zenItem = new JCheckBoxMenuItem("zentriert");
+        zenItem.setAccelerator(KeyStroke.getKeyStroke(KeyEvent.VK_Z, KeyEvent.CTRL_DOWN_MASK));
+        menu.add(zenItem);
+        menu.addSeparator();
+        sub.add(new JMenuItem("..als HTML"));
+        sub.add(new JMenuItem("..als Source"));
+        menuBar.add(menu);
+        j.setJMenuBar(menuBar);
+        j.setVisible(true);
+        sub.setEnabled(false);
+    }
+}
+
+Menuauswahl
+Wie auf Auswahl der Menueinträge reagieren?
+- Bei Auswahl dem JMenuItem ein ActionEvent schicken
+- Dem MenuItem ein ActionListener hinterlegen, um auf ActionEvent zu reagieren (siehe auch: Drücken eines Buttons)
+
+class JMenuItem{
+    public void addActionListener(ActionListener l);
+}
+interface ActionListener{
+    public void actionPerformed(ActionEvent e);
+}
+class ActionEvent{
+    public String getActionCommand();
+}
+
+package vl_java;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+public class VL_05_Beispiel31 {
+    public static void main(String[] args){
+        JFrame j = new JFrame();
+        j.setBounds(100, 100, 300, 200);
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Datei");
+        JMenuItem endeItem =
